@@ -22,9 +22,9 @@ public class Main {
         BufferedReader input = new BufferedReader(new FileReader("./src/test.imlg"));
         BufferedWriter output = new BufferedWriter(new FileWriter("./src/test.c"));
 
-        // 선언된 변수 관리
-        Set<String> declaredVariables = new HashSet<>();
-        List<String> variableDeclarations = new ArrayList<>();
+        Set<String> declaredVariables = new HashSet<>();  // 선언된 변수를 관리할 Set
+        List<String> variableDeclarations = new ArrayList<>();  // 변수 선언을 저장할 리스트
+        List<String> operations = new ArrayList<>();  // 동작을 저장할 리스트
 
         // C 코드의 시작부
         output.write("#include <stdio.h>\n\n");
@@ -36,7 +36,6 @@ public class Main {
 
         // 입력 파일 순회
         String line;
-        List<String> operations = new ArrayList<>();  // 동작을 저장할 리스트
         while ((line = input.readLine()) != null) {
             // 정규식 패턴 매칭을 위한 Matcher
             Matcher intInputMatcher = intInputPattern.matcher(line);
@@ -47,11 +46,8 @@ public class Main {
                 String caret = intInputMatcher.group(1);
                 String variable = getIntVariable(caret);  // ^의 개수에 따른 변수 반환
 
-                // 변수가 선언되지 않은 상태일 경우
-                if (!declaredVariables.contains(variable)) {
-                    declaredVariables.add(variable);
-                    variableDeclarations.add(indent + "int " + variable + ";\n");
-                }
+                // 변수 선언 여부 체크 및 처리
+                checkAndDeclareVariable(variable, "int", declaredVariables, variableDeclarations, indent);
 
                 // 정수 입력 처리
                 operations.add(indent + "scanf(\"%d\", &" + variable + ");\n");
@@ -62,13 +58,10 @@ public class Main {
             // 문자열 입력 처리
             if (stringInputMatcher.find()) {
                 String caret = stringInputMatcher.group(1);
-                String variable = getStringVariable(caret);
+                String variable = getStringVariable(caret);  // ^의 개수에 따른 변수 반환
 
-                // 변수가 선언되지 않은 상태일 경우
-                if (!declaredVariables.contains(variable)) {
-                    declaredVariables.add(variable);
-                    variableDeclarations.add(indent + "char* " + variable + ";\n");
-                }
+                // 변수 선언 여부 체크 및 처리
+                checkAndDeclareVariable(variable, "char*", declaredVariables, variableDeclarations, indent);
 
                 // 문자열 입력 처리
                 operations.add(indent + "scanf(\"%s\", " + variable + ");\n");
@@ -98,7 +91,7 @@ public class Main {
     }
 
     /**
-     * 입력된 ^ 개수에 따라 정수 변수를 지정하는 함수
+     * 입력된 ^ 개수에 따라 정수 변수를 지정하는 메서드
      *
      * @param caret 입력된 ^ 문자
      * @return 해당하는 변수명 반환 (a, b, c 중 하나)
@@ -117,7 +110,7 @@ public class Main {
     }
 
     /**
-     * 입력된 ^ 개수에 따라 문자열 변수를 지정하는 함수
+     * 입력된 ^ 개수에 따라 문자열 변수를 지정하는 메서드
      *
      * @param caret 입력된 ^ 문자
      * @return 해당하는 변수명 반환 (as, bs, cs 중 하나)
@@ -133,5 +126,27 @@ public class Main {
             return "cs";
         }
         return null;
+    }
+
+    /**
+     * 변수가 선언되지 않은 경우 변수를 선언하는 메서드
+     *
+     * @param variable             변수명
+     * @param type                 변수 타입 (int, char*)
+     * @param declaredVariables    이미 선언된 변수 목록
+     * @param variableDeclarations 변수 선언을 저장할 리스트
+     * @param indent               들여쓰기 설정
+     */
+    private static void checkAndDeclareVariable(
+        String variable,
+        String type,
+        Set<String> declaredVariables,
+        List<String> variableDeclarations,
+        String indent
+    ) {
+        if (!declaredVariables.contains(variable)) {
+            declaredVariables.add(variable);
+            variableDeclarations.add(indent + type + " " + variable + ";\n");
+        }
     }
 }
