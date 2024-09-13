@@ -162,19 +162,33 @@ public class Main {
             // 계산 후 지정
             if (assignAfterCalcMatcher.find()) {
                 String caret = assignAfterCalcMatcher.group(1);
+                System.out.println(caret);
                 String variable = getIntVariable(caret);  // ^의 개수에 따른 변수 반환
                 String operation = assignAfterCalcMatcher.group(3).split(" ")[0];  // 연산 종류 (:} 또는 :}})
+                System.out.println(operation);
 
                 // 변수 선언 여부 체크 및 처리
                 checkAndDeclareVariable(variable, "int", declaredVariables, variableDeclarations);
 
-                String operand1 = assignAfterCalcMatcher.group(4);  // 첫 번째 피연산자
+                String operand1;
+                if (operation.equals(":}")) {
+                    operand1 = assignAfterCalcMatcher.group(4);
+                } else {  // operation.equals(":}}"
+                    operand1 = assignAfterCalcMatcher.group(8);
+                }
+                System.out.println(operand1);
                 // 피연산자가 숫자가 아니라면 변수로 처리
                 if (!isNumeric(operand1)) {
                     operand1 = getIntVariable(operand1);
                 }
 
-                String operand2 = assignAfterCalcMatcher.group(6);  // 두 번째 피연산자
+                String operand2;
+                if (operation.equals(":}")) {
+                    operand2 = assignAfterCalcMatcher.group(6);
+                } else {  // operation.equals(":}}"
+                    operand2 = assignAfterCalcMatcher.group(10);
+                }
+                System.out.println(operand2);
                 // 피연산자가 숫자가 아니라면 변수로 처리
                 if (!isNumeric(operand2)) {
                     operand2 = getIntVariable(operand2);
