@@ -10,6 +10,8 @@ int main() {
     scanf("%d", &b);
     scanf("%d", &c);
     scanf("%s", bs);
+    printf("%d", a);
+    printf("%d", 123);
 
     return 0;
 }

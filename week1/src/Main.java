@@ -32,7 +32,8 @@ public class Main {
 
         // 정규식 패턴
         Pattern intInputPattern = Pattern.compile(":\\) (\\^(\\^){0,2})");  // 정수 읽기 패턴
-        Pattern stringInputPattern = Pattern.compile(":\\):\\] (\\^(\\^){0,2})");  // 문자열 읽기 패턴
+        Pattern stringInputPattern = Pattern.compile(":\\):] (\\^(\\^){0,2})");  // 문자열 읽기 패턴
+        Pattern intOutputPattern = Pattern.compile(":\\)\\) (\\d+|\\^(\\^){0,2})");  // 정수 출력 패턴 (숫자 또는 변수)
 
         // 입력 파일 순회
         String line;
@@ -40,6 +41,7 @@ public class Main {
             // 정규식 패턴 매칭을 위한 Matcher
             Matcher intInputMatcher = intInputPattern.matcher(line);
             Matcher stringInputMatcher = stringInputPattern.matcher(line);
+            Matcher intOutputMatcher = intOutputPattern.matcher(line);
 
             // 정수 입력 처리
             if (intInputMatcher.find()) {
@@ -66,6 +68,19 @@ public class Main {
                 // 문자열 입력 처리
                 operations.add(indent + "scanf(\"%s\", " + variable + ");\n");
 
+                continue;
+            }
+
+            // 정수 출력 처리
+            if (intOutputMatcher.find()) {
+                String outputValue = intOutputMatcher.group(1);
+
+                // 변수 출력일 경우, value 변경
+                if (!isNumeric(outputValue)) {
+                    outputValue = getIntVariable(outputValue);
+                }
+
+                operations.add(indent + "printf(\"%d\", " + outputValue + ");\n");
                 continue;
             }
         }
@@ -148,5 +163,15 @@ public class Main {
             declaredVariables.add(variable);
             variableDeclarations.add(indent + type + " " + variable + ";\n");
         }
+    }
+
+    /**
+     * 입력된 문자열이 숫자인지 확인하는 메서드
+     *
+     * @param string 입력된 문자열
+     * @return true면 숫자, false면 숫자가 아님
+     */
+    private static boolean isNumeric(String string) {
+        return string.matches("-?\\d+");  // 정수로 구성된 숫자 매칭
     }
 }
