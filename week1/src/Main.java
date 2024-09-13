@@ -15,6 +15,9 @@ import java.util.regex.Pattern;
 public class Main {
 
     public static void main(String[] args) throws IOException {
+        // 들여쓰기 설정
+        String indent = " ".repeat(4);
+
         // 파일 읽기 및 쓰기
         BufferedReader input = new BufferedReader(new FileReader("./src/test.imlg"));
         BufferedWriter output = new BufferedWriter(new FileWriter("./src/test.c"));
@@ -24,7 +27,7 @@ public class Main {
         List<String> variableDeclarations = new ArrayList<>();
 
         // C 코드의 시작부
-        output.write("#include <stdio.h>\n");
+        output.write("#include <stdio.h>\n\n");
         output.write("int main() {\n");
 
         // 정규식 패턴
@@ -45,11 +48,11 @@ public class Main {
                 // 변수가 선언되지 않은 상태일 경우
                 if (!declaredVariables.contains(variable)) {
                     declaredVariables.add(variable);
-                    variableDeclarations.add("\tint " + variable + ";\n");
+                    variableDeclarations.add(indent + "int " + variable + ";\n");
                 }
 
                 // 정수 입력 처리
-                operations.add("\tscanf(\"%d\", &" + variable + ");\n");
+                operations.add(indent + "scanf(\"%d\", &" + variable + ");\n");
             }
         }
 
@@ -66,7 +69,7 @@ public class Main {
         output.write("\n");
 
         // C 코드의 종료부
-        output.write("\treturn 0;\n");
+        output.write(indent + "return 0;\n");
         output.write("}\n");
 
         input.close();
