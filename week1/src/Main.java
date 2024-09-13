@@ -40,10 +40,7 @@ public class Main {
             // 정수 입력 처리
             if (intInputMatcher.find()) {
                 String temp = intInputMatcher.group(1);
-                String variable = "a";
-                if (temp.equals("^")) variable = "a";
-                if (temp.equals("^^")) variable = "b";
-                if (temp.equals("^^^")) variable = "c";
+                String variable = getVariable(temp);
 
                 // 변수가 선언되지 않은 상태일 경우
                 if (!declaredVariables.contains(variable)) {
@@ -74,5 +71,15 @@ public class Main {
 
         input.close();
         output.close();
+    }
+
+    private static String getVariable(String caret) {
+        if (caret.equals("^"))
+            return "a";
+        if (caret.equals("^^"))
+            return "b";
+        if (caret.equals("^^^"))
+            return "c";
+        return null;
     }
 }
