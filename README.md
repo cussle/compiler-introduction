@@ -8,7 +8,7 @@
 1️⃣ [1주차 구현](https://github.com/cussle/imolang-compiler/tree/main/week1)
 
 ## 기술 스택
-- **JAVA**: [Java Documentation](https://docs.oracle.com/en/java/javase/)
+- **Java 21**: [Java 21 Documentation](https://docs.oracle.com/en/java/javase/21/)
 
 ## 코딩 컨벤션
 
