@@ -3,10 +3,11 @@
 int main() {
     int a;
     int b;
+    int c;
 
-    a = 5;
-    b = 55;
-    c = 10 + b;
+    scanf("%d", &a);
+    scanf("%d", &b);
+    c = a + b;
 
     return 0;
 }

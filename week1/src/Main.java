@@ -165,6 +165,9 @@ public class Main {
                 String variable = getIntVariable(caret);  // ^의 개수에 따른 변수 반환
                 String operation = assignAfterCalcMatcher.group(3).split(" ")[0];  // 연산 종류 (:} 또는 :}})
 
+                // 변수 선언 여부 체크 및 처리
+                checkAndDeclareVariable(variable, "int", declaredVariables, variableDeclarations);
+
                 String operand1 = assignAfterCalcMatcher.group(4);  // 첫 번째 피연산자
                 // 피연산자가 숫자가 아니라면 변수로 처리
                 if (!isNumeric(operand1)) {
@@ -194,6 +197,9 @@ public class Main {
                 String variable = getIntVariable(caret);  // ^의 개수에 따른 변수 반환
                 String value = additionMatcher.group(3);  // 더할 값 (변수 또는 숫자)
 
+                // 변수 선언 여부 체크 및 처리
+                checkAndDeclareVariable(variable, "int", declaredVariables, variableDeclarations);
+
                 // 더할 값이 변수일 경우 처리
                 if (!isNumeric(value)) {
                     value = getIntVariable(value);
@@ -210,7 +216,9 @@ public class Main {
                 String caret = subtractionMatcher.group(1);
                 String variable = getIntVariable(caret);  // ^의 개수에 따른 변수 반환
                 String value = subtractionMatcher.group(3);  // 뺄 값 (변수 또는 숫자)
-                System.out.println(value);
+
+                // 변수 선언 여부 체크 및 처리
+                checkAndDeclareVariable(variable, "int", declaredVariables, variableDeclarations);
 
                 // 뺄 값이 변수일 경우 처리
                 if (!isNumeric(value)) {
