@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// imolang 덧셈연산: `:\}\^{0,3}\^{0,3}`
-
 public class Main {
 
     // 상수 선언
@@ -33,17 +31,17 @@ public class Main {
         output.write("int main() {\n");
 
         // 정규식 패턴
-        Pattern intInputPattern = Pattern.compile(":\\) (\\^(\\^){0,2})");  // 정수 읽기 패턴
-        Pattern stringInputPattern = Pattern.compile(":\\):] (\\^(\\^){0,2})");  // 문자열 읽기 패턴
-        Pattern intOutputPattern = Pattern.compile(":\\)\\) (\\d+|\\^(\\^){0,2})");  // 정수 출력 패턴 (정수 또는 변수)
-        Pattern stringOutputPattern = Pattern.compile(":\\)\\):] (\\S+|\\^(\\^){0,2})");  // 문자열 출력 패턴 (문자열 또는 변수)
+        Pattern intInputPattern = Pattern.compile(":\\) ((\\^){1,3})");  // 정수 읽기 패턴
+        Pattern stringInputPattern = Pattern.compile(":\\):] ((\\^){1,3})");  // 문자열 읽기 패턴
+        Pattern intOutputPattern = Pattern.compile(":\\)\\) (\\d+|(\\^){1,3})");  // 정수 출력 패턴 (정수 또는 변수)
+        Pattern stringOutputPattern = Pattern.compile(":\\)\\):] (\\S+|(\\^){1,3})");  // 문자열 출력 패턴 (문자열 또는 변수)
         Pattern newlineOutputPattern = Pattern.compile(":\\)\\):]]");  // 줄바꿈 출력 패턴
-        Pattern assignmentIntPattern = Pattern.compile(":\\(\\) (\\^(\\^){0,2}) (\\d+)");  // 정수 할당 패턴
-        Pattern assignmentStringPattern = Pattern.compile(":\\(\\):] (\\^(\\^){0,2}) (\\S+)");  // 문자열 할당 패턴
-        Pattern additionPattern = Pattern.compile(":} (\\^(\\^){0,2}) (\\^(\\^){0,2}|\\d+)");  // 덧셈 패턴
-        Pattern subtractionPattern = Pattern.compile(":}} (\\^(\\^){0,2}) (\\^(\\^){0,2}|\\d+)");  // 뺄셈 패턴
+        Pattern assignmentIntPattern = Pattern.compile(":\\(\\) ((\\^){1,3}) (\\d+)");  // 정수 할당 패턴
+        Pattern assignmentStringPattern = Pattern.compile(":\\(\\):] ((\\^){1,3}) (\\S+)");  // 문자열 할당 패턴
+        Pattern additionPattern = Pattern.compile(":} ((\\^){1,3}) ((\\^){1,3}|\\d+)");  // 덧셈 패턴
+        Pattern subtractionPattern = Pattern.compile(":}} ((\\^){1,3}) ((\\^){1,3}|\\d+)");  // 뺄셈 패턴
         Pattern assignAfterCalcPattern = Pattern.compile(
-            ":\\(\\) (\\^(\\^){0,2}) (:} (\\^(\\^){0,2}|\\d+) (\\^(\\^){0,2}|\\d+)|:}} (\\^(\\^){0,2}|\\d+) (\\^(\\^){0,2}|\\d+))"
+            ":\\(\\) ((\\^){1,3}) (:} ((\\^){1,3}|\\d+) ((\\^){1,3}|\\d+)|:}} ((\\^){1,3}|\\d+) ((\\^){1,3}|\\d+))"
         );  // 계산 후 지정 패턴
 
         // 입력 파일 순회
@@ -162,10 +160,8 @@ public class Main {
             // 계산 후 지정
             if (assignAfterCalcMatcher.find()) {
                 String caret = assignAfterCalcMatcher.group(1);
-                System.out.println(caret);
                 String variable = getIntVariable(caret);  // ^의 개수에 따른 변수 반환
                 String operation = assignAfterCalcMatcher.group(3).split(" ")[0];  // 연산 종류 (:} 또는 :}})
-                System.out.println(operation);
 
                 // 변수 선언 여부 체크 및 처리
                 checkAndDeclareVariable(variable, "int", declaredVariables, variableDeclarations);
@@ -176,7 +172,6 @@ public class Main {
                 } else {  // operation.equals(":}}"
                     operand1 = assignAfterCalcMatcher.group(8);
                 }
-                System.out.println(operand1);
                 // 피연산자가 숫자가 아니라면 변수로 처리
                 if (!isNumeric(operand1)) {
                     operand1 = getIntVariable(operand1);
@@ -188,12 +183,10 @@ public class Main {
                 } else {  // operation.equals(":}}"
                     operand2 = assignAfterCalcMatcher.group(10);
                 }
-                System.out.println(operand2);
                 // 피연산자가 숫자가 아니라면 변수로 처리
                 if (!isNumeric(operand2)) {
                     operand2 = getIntVariable(operand2);
                 }
-
 
                 // 계산 후 지정 처리
                 if (operation.equals(":}")) {
