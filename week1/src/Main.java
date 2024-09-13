@@ -32,6 +32,7 @@ public class Main {
 
         // 정규식 패턴
         Pattern intInputPattern = Pattern.compile(":\\) (\\^(\\^){0,2})");  // 정수 읽기 패턴
+        Pattern stringInputPattern = Pattern.compile(":\\):\\] (\\^(\\^){0,2})");  // 문자열 읽기 패턴
 
         // 입력 파일 순회
         String line;
@@ -39,11 +40,12 @@ public class Main {
         while ((line = input.readLine()) != null) {
             // 정규식 패턴 매칭을 위한 Matcher
             Matcher intInputMatcher = intInputPattern.matcher(line);
+            Matcher stringInputMatcher = stringInputPattern.matcher(line);
 
             // 정수 입력 처리
             if (intInputMatcher.find()) {
-                String temp = intInputMatcher.group(1);
-                String variable = getVariable(temp);
+                String caret = intInputMatcher.group(1);
+                String variable = getIntVariable(caret);  // ^의 개수에 따른 변수 반환
 
                 // 변수가 선언되지 않은 상태일 경우
                 if (!declaredVariables.contains(variable)) {
@@ -53,6 +55,25 @@ public class Main {
 
                 // 정수 입력 처리
                 operations.add(indent + "scanf(\"%d\", &" + variable + ");\n");
+
+                continue;
+            }
+
+            // 문자열 입력 처리
+            if (stringInputMatcher.find()) {
+                String caret = stringInputMatcher.group(1);
+                String variable = getStringVariable(caret);
+
+                // 변수가 선언되지 않은 상태일 경우
+                if (!declaredVariables.contains(variable)) {
+                    declaredVariables.add(variable);
+                    variableDeclarations.add(indent + "char* " + variable + ";\n");
+                }
+
+                // 문자열 입력 처리
+                operations.add(indent + "scanf(\"%s\", " + variable + ");\n");
+
+                continue;
             }
         }
 
@@ -76,13 +97,41 @@ public class Main {
         output.close();
     }
 
-    private static String getVariable(String caret) {
-        if (caret.equals("^"))
+    /**
+     * 입력된 ^ 개수에 따라 정수 변수를 지정하는 함수
+     *
+     * @param caret 입력된 ^ 문자
+     * @return 해당하는 변수명 반환 (a, b, c 중 하나)
+     */
+    private static String getIntVariable(String caret) {
+        if (caret.equals("^")) {
             return "a";
-        if (caret.equals("^^"))
+        }
+        if (caret.equals("^^")) {
             return "b";
-        if (caret.equals("^^^"))
+        }
+        if (caret.equals("^^^")) {
             return "c";
+        }
+        return null;
+    }
+
+    /**
+     * 입력된 ^ 개수에 따라 문자열 변수를 지정하는 함수
+     *
+     * @param caret 입력된 ^ 문자
+     * @return 해당하는 변수명 반환 (as, bs, cs 중 하나)
+     */
+    private static String getStringVariable(String caret) {
+        if (caret.equals("^")) {
+            return "as";
+        }
+        if (caret.equals("^^")) {
+            return "bs";
+        }
+        if (caret.equals("^^^")) {
+            return "cs";
+        }
         return null;
     }
 }
