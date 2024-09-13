@@ -15,6 +15,7 @@ int main() {
     printf("\n");
     c = 500;
     a = 500;
+    strcpy(bs, "helloworlddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
 
     return 0;
 }
