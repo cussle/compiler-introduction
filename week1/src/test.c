@@ -3,6 +3,7 @@
 int main() {
     int a;
     char bs[5000];
+    int c;
 
     scanf("%d", &a);
     printf("%d", a);
@@ -12,6 +13,8 @@ int main() {
     scanf("%s", bs);
     printf("%s", bs);
     printf("\n");
+    c = 500;
+    a = 500;
 
     return 0;
 }
