@@ -40,6 +40,7 @@ public class Main {
         Pattern newlineOutputPattern = Pattern.compile(":\\)\\):]]");  // 줄바꿈 출력 패턴
         Pattern assignmentIntPattern = Pattern.compile(":\\(\\) (\\^(\\^){0,2}) (\\d+)");  // 정수 할당 패턴
         Pattern assignmentStringPattern = Pattern.compile(":\\(\\):] (\\^(\\^){0,2}) (\\S+)");  // 문자열 할당 패턴
+        Pattern additionPattern = Pattern.compile(":\\} (\\^(\\^){0,2}) (\\^(\\^){0,2}|\\d+)");  // 덧셈 패턴
 
         // 입력 파일 순회
         String line;
@@ -52,6 +53,7 @@ public class Main {
             Matcher newlineOutputMatcher = newlineOutputPattern.matcher(line);
             Matcher assignmentIntMatcher = assignmentIntPattern.matcher(line);
             Matcher assignmentStringMatcher = assignmentStringPattern.matcher(line);
+            Matcher additionMatcher = additionPattern.matcher(line);
 
             // 정수 입력
             if (intInputMatcher.find()) {
@@ -151,6 +153,24 @@ public class Main {
                 continue;
             }
 
+            // 덧셈 연산
+            if (additionMatcher.find()) {
+                String caret = additionMatcher.group(1);
+                String variable = getIntVariable(caret);  // ^의 개수에 따른 변수 반환
+                String value = additionMatcher.group(3);  // 더할 값 (변수 또는 숫자)
+
+                // 더할 값이 변수일 경우 처리
+                if (!isNumeric(value)) {
+                    value = getIntVariable(value);
+                }
+
+                // 덧셈 처리
+                operations.add(INDENT + variable + " += " + value + ";\n");
+
+                continue;
+            }
+
+
         }
 
         // C 코드의 변수 선언
@@ -176,8 +196,8 @@ public class Main {
     /**
      * 입력된 ^ 개수에 따라 정수 변수를 지정하는 메서드
      *
-     * @param   caret 입력된 ^ 문자
-     * @return  해당하는 변수명 반환 (a, b, c 중 하나)
+     * @param caret 입력된 ^ 문자
+     * @return 해당하는 변수명 반환 (a, b, c 중 하나)
      */
     private static String getIntVariable(String caret) {
         if (caret.equals("^")) {
@@ -195,8 +215,8 @@ public class Main {
     /**
      * 입력된 ^ 개수에 따라 문자열 변수를 지정하는 메서드
      *
-     * @param   caret 입력된 ^ 문자
-     * @return  해당하는 변수명 반환 (as, bs, cs 중 하나)
+     * @param caret 입력된 ^ 문자
+     * @return 해당하는 변수명 반환 (as, bs, cs 중 하나)
      */
     private static String getStringVariable(String caret) {
         if (caret.equals("^")) {
@@ -214,10 +234,10 @@ public class Main {
     /**
      * 변수가 선언되지 않은 경우 변수를 선언하는 메서드 (정적 배열 크기를 사용)
      *
-     * @param variable              변수명
-     * @param type                  변수 타입 (int, char 배열)
-     * @param declaredVariables     이미 선언된 변수 목록
-     * @param variableDeclarations  변수 선언을 저장할 리스트
+     * @param variable             변수명
+     * @param type                 변수 타입 (int, char 배열)
+     * @param declaredVariables    이미 선언된 변수 목록
+     * @param variableDeclarations 변수 선언을 저장할 리스트
      */
     private static void checkAndDeclareVariable(
         String variable,
@@ -238,8 +258,8 @@ public class Main {
     /**
      * 입력된 문자열이 숫자인지 확인하는 메서드
      *
-     * @param   string 입력된 문자열
-     * @return  true면 숫자, false면 숫자가 아님
+     * @param string 입력된 문자열
+     * @return true면 숫자, false면 숫자가 아님
      */
     private static boolean isNumeric(String string) {
         return string.matches("-?\\d+");  // 정수로 구성된 숫자 매칭

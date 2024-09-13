@@ -2,20 +2,12 @@
 
 int main() {
     int a;
-    char bs[5000];
-    int c;
+    int b;
 
-    scanf("%d", &a);
-    printf("%d", a);
-    printf("\n");
-    printf("%s", "테스트");
-    printf("\n");
-    scanf("%s", bs);
-    printf("%s", bs);
-    printf("\n");
-    c = 500;
-    a = 500;
-    strcpy(bs, "helloworlddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
+    a = 5;
+    b = 55;
+    b += a;
+    printf("%d", b);
 
     return 0;
 }
