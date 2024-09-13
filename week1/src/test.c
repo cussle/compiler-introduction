@@ -2,16 +2,13 @@
 
 int main() {
     int a;
-    int b;
-    int c;
-    char* bs;
+    char bs[5000];
 
     scanf("%d", &a);
-    scanf("%d", &b);
-    scanf("%d", &c);
-    scanf("%s", bs);
     printf("%d", a);
-    printf("%d", 123);
+    printf("%s", "테스트");
+    scanf("%s", bs);
+    printf("%s", bs);
 
     return 0;
 }
