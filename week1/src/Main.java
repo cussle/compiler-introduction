@@ -37,6 +37,7 @@ public class Main {
         Pattern stringInputPattern = Pattern.compile(":\\):] (\\^(\\^){0,2})");  // 문자열 읽기 패턴
         Pattern intOutputPattern = Pattern.compile(":\\)\\) (\\d+|\\^(\\^){0,2})");  // 정수 출력 패턴 (정수 또는 변수)
         Pattern stringOutputPattern = Pattern.compile(":\\)\\):] (\\S+|\\^(\\^){0,2})");  // 문자열 출력 패턴 (문자열 또는 변수)
+        Pattern newlineOutputPattern = Pattern.compile(":\\)\\):]]");  // 줄바꿈 출력 패턴
 
         // 입력 파일 순회
         String line;
@@ -46,6 +47,7 @@ public class Main {
             Matcher stringInputMatcher = stringInputPattern.matcher(line);
             Matcher intOutputMatcher = intOutputPattern.matcher(line);
             Matcher stringOutputMatcher = stringOutputPattern.matcher(line);
+            Matcher newlineOutputMatcher = newlineOutputPattern.matcher(line);
 
             // 정수 입력
             if (intInputMatcher.find()) {
@@ -106,6 +108,14 @@ public class Main {
 
                 continue;
             }
+
+            // 줄바꿈 출력
+            if (newlineOutputMatcher.find()) {
+                operations.add(INDENT + "printf(\"\\n\");\n");
+
+                continue;
+            }
+
         }
 
         // C 코드의 변수 선언
