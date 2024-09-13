@@ -42,6 +42,9 @@ public class Main {
         Pattern assignmentStringPattern = Pattern.compile(":\\(\\):] (\\^(\\^){0,2}) (\\S+)");  // 문자열 할당 패턴
         Pattern additionPattern = Pattern.compile(":} (\\^(\\^){0,2}) (\\^(\\^){0,2}|\\d+)");  // 덧셈 패턴
         Pattern subtractionPattern = Pattern.compile(":}} (\\^(\\^){0,2}) (\\^(\\^){0,2}|\\d+)");  // 뺄셈 패턴
+        Pattern assignAfterCalcPattern = Pattern.compile(
+            ":\\(\\) (\\^(\\^){0,2}) (:} (\\^(\\^){0,2}|\\d+) (\\^(\\^){0,2}|\\d+)|:}} (\\^(\\^){0,2}|\\d+) (\\^(\\^){0,2}|\\d+))"
+        );  // 계산 후 지정 패턴
 
         // 입력 파일 순회
         String line;
@@ -56,6 +59,7 @@ public class Main {
             Matcher assignmentStringMatcher = assignmentStringPattern.matcher(line);
             Matcher additionMatcher = additionPattern.matcher(line);
             Matcher subtractionMatcher = subtractionPattern.matcher(line);
+            Matcher assignAfterCalcMatcher = assignAfterCalcPattern.matcher(line);
 
             // 정수 입력
             if (intInputMatcher.find()) {
@@ -155,6 +159,35 @@ public class Main {
                 continue;
             }
 
+            // 계산 후 지정
+            if (assignAfterCalcMatcher.find()) {
+                String caret = assignAfterCalcMatcher.group(1);
+                String variable = getIntVariable(caret);  // ^의 개수에 따른 변수 반환
+                String operation = assignAfterCalcMatcher.group(3).split(" ")[0];  // 연산 종류 (:} 또는 :}})
+
+                String operand1 = assignAfterCalcMatcher.group(4);  // 첫 번째 피연산자
+                // 피연산자가 숫자가 아니라면 변수로 처리
+                if (!isNumeric(operand1)) {
+                    operand1 = getIntVariable(operand1);
+                }
+
+                String operand2 = assignAfterCalcMatcher.group(6);  // 두 번째 피연산자
+                // 피연산자가 숫자가 아니라면 변수로 처리
+                if (!isNumeric(operand2)) {
+                    operand2 = getIntVariable(operand2);
+                }
+
+
+                // 계산 후 지정 처리
+                if (operation.equals(":}")) {
+                    operations.add(INDENT + variable + " = " + operand1 + " + " + operand2 + ";\n");
+                } else if (operation.equals(":}}")) {
+                    operations.add(INDENT + variable + " = " + operand1 + " - " + operand2 + ";\n");
+                }
+
+                continue;
+            }
+
             // 덧셈 연산
             if (additionMatcher.find()) {
                 String caret = additionMatcher.group(1);
@@ -175,8 +208,7 @@ public class Main {
             // 뺄셈 연산
             if (subtractionMatcher.find()) {
                 String caret = subtractionMatcher.group(1);
-                System.out.println(caret);
-                String variable = getIntVariable(caret);  // 대상 변수
+                String variable = getIntVariable(caret);  // ^의 개수에 따른 변수 반환
                 String value = subtractionMatcher.group(3);  // 뺄 값 (변수 또는 숫자)
                 System.out.println(value);
 

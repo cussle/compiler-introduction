@@ -6,10 +6,7 @@ int main() {
 
     a = 5;
     b = 55;
-    b += a;
-    b -= a;
-    b -= 55;
-    printf("%d", b);
+    c = 10 + b;
 
     return 0;
 }
