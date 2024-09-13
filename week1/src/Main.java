@@ -40,7 +40,8 @@ public class Main {
         Pattern newlineOutputPattern = Pattern.compile(":\\)\\):]]");  // 줄바꿈 출력 패턴
         Pattern assignmentIntPattern = Pattern.compile(":\\(\\) (\\^(\\^){0,2}) (\\d+)");  // 정수 할당 패턴
         Pattern assignmentStringPattern = Pattern.compile(":\\(\\):] (\\^(\\^){0,2}) (\\S+)");  // 문자열 할당 패턴
-        Pattern additionPattern = Pattern.compile(":\\} (\\^(\\^){0,2}) (\\^(\\^){0,2}|\\d+)");  // 덧셈 패턴
+        Pattern additionPattern = Pattern.compile(":} (\\^(\\^){0,2}) (\\^(\\^){0,2}|\\d+)");  // 덧셈 패턴
+        Pattern subtractionPattern = Pattern.compile(":}} (\\^(\\^){0,2}) (\\^(\\^){0,2}|\\d+)");  // 뺄셈 패턴
 
         // 입력 파일 순회
         String line;
@@ -54,6 +55,7 @@ public class Main {
             Matcher assignmentIntMatcher = assignmentIntPattern.matcher(line);
             Matcher assignmentStringMatcher = assignmentStringPattern.matcher(line);
             Matcher additionMatcher = additionPattern.matcher(line);
+            Matcher subtractionMatcher = subtractionPattern.matcher(line);
 
             // 정수 입력
             if (intInputMatcher.find()) {
@@ -164,13 +166,30 @@ public class Main {
                     value = getIntVariable(value);
                 }
 
-                // 덧셈 처리
+                // 덧셈 연산 처리
                 operations.add(INDENT + variable + " += " + value + ";\n");
 
                 continue;
             }
 
+            // 뺄셈 연산
+            if (subtractionMatcher.find()) {
+                String caret = subtractionMatcher.group(1);
+                System.out.println(caret);
+                String variable = getIntVariable(caret);  // 대상 변수
+                String value = subtractionMatcher.group(3);  // 뺄 값 (변수 또는 숫자)
+                System.out.println(value);
 
+                // 뺄 값이 변수일 경우 처리
+                if (!isNumeric(value)) {
+                    value = getIntVariable(value);
+                }
+
+                // 뺄셈 연산 처리
+                operations.add(INDENT + variable + " -= " + value + ";\n");
+
+                continue;
+            }
         }
 
         // C 코드의 변수 선언
