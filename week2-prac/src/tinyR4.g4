@@ -12,7 +12,7 @@ params		:
 
 param		:  ID ':' type_spec 		;
 
-type_spec	:  'u32'				    ;     // how about including array or string?
+type_spec	:  U32				    ;     // how about including array or string?
 
 ret_type_spec	:
 		| RARROW type_spec
@@ -70,7 +70,7 @@ return_stmt	: RETURN (expr)? ';'            ;
 
 args	:
        | expr (',' expr)*                   ;
-
+// 22-2 가 마지막, 총 39개?
 FUNC: 'fn';
 U32: 'u32';
 
