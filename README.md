@@ -5,7 +5,8 @@
 - 각 주차 요구사항을 충족하는 컴파일러 구현
 
 ## 주차별 목록
-1️⃣ [1주차 구현](https://github.com/cussle/imolang-compiler/tree/main/week1)
+1️⃣ [1주차 구현](https://github.com/cussle/compiler-introduction/tree/main/week1)
+2️⃣ [2주차 구현](https://github.com/cussle/compiler-introduction/tree/main/week2)
 
 ## 기술 스택
 - **Java 21**: [Java 21 Documentation](https://docs.oracle.com/en/java/javase/21/)
