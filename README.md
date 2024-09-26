@@ -1,4 +1,4 @@
-# imolang-compiler
+# compiler-introduction
 
 ## 개요
 - CNU 2024-가을학기 컴파일러개론 과제 기록
