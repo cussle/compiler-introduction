@@ -1,0 +1,9 @@
+fn main (x: u32, y: u32) -> u32 {
+  let temp = x;
+  temp = temp + y;
+  temp = x * y;
+
+  println!("2020{}", "02521");
+
+  return (--temp);
+}
