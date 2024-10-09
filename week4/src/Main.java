@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 
 public class Main {
 
+    private static final boolean DEBUG = false;  // 디버깅 플래그
     private static int index;  // 현재 문자열의 index를 관리하는 전역변수
     private static String input;  // 입력받은 문자열을 담는 전역변수
 
@@ -34,9 +35,13 @@ public class Main {
 
     // 다음 문자로 이동하는 메서드
     private static void nextSymbol() {
-        System.out.print("[debug] current: " + currentSymbol());
+        if (DEBUG)
+            System.out.print("[debug] current: " + currentSymbol());
+
         index++;
-        System.out.println(" → next: " + currentSymbol());
+
+        if (DEBUG)
+            System.out.println(" → next: " + currentSymbol());
     }
 
     // Terminal Symbol `a`에 대한 procedure
@@ -140,21 +145,24 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringBuilder sb = new StringBuilder();
 
         // CFG 출력
-        sb.append("CFG:").append("\n");
-        sb.append("\t").append("S -> aA | bB").append("\n");
-        sb.append("\t").append("A -> aBb | bBb | cBb").append("\n");
-        sb.append("\t").append("B -> d | e | f").append("\n\n");
+        if (DEBUG) {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("[debug] CFG:").append("\n");
+            sb.append("\t").append("S -> aA | bB").append("\n");
+            sb.append("\t").append("A -> aBb | bBb | cBb").append("\n");
+            sb.append("\t").append("B -> d | e | f").append("\n\n");
+
+            sb.append("input: ");
+            System.out.print(sb.toString());
+        }
 
         // 문자열 입력
-        sb.append("input: ");
-        System.out.print(sb.toString());
         input = br.readLine();
         br.close();
 
-        System.out.println();
         // 파서 실행
         if (parse()) {
             System.out.println(ACCEPT);
