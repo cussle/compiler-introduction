@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class Main {
+
     private static int index;  // 현재 문자열의 index를 관리하는 전역변수
     private static String input;  // 입력받은 문자열을 담는 전역변수
 
@@ -29,7 +30,9 @@ public class Main {
 
     // 다음 문자로 이동하는 메서드
     private static void nextSymbol() {
+        System.out.print("[debug] current: " + input.charAt(index));
         index++;
+        System.out.println(" → next: " + input.charAt(index));
     }
 
     // Terminal Symbol `a`에 대한 procedure
@@ -85,6 +88,45 @@ public class Main {
         }
         return false;
     }
+
+    // Non-Terminal Symbol `S`에 대한 procedure
+    // S -> aA | bB
+    private static boolean pS() {
+        if (pa()) {  // a로 시작할 경우,
+            return pA();  // 이후 A 형태여야 함
+        }
+
+        if (pb()) {  // b로 시작할 경우,
+            return pB();  // 이후 B 형태여야 함
+        }
+
+        return false;
+    }
+
+    // Non-Terminal Symbol `A`에 대한 procedure
+    // A -> aBb | bBb | cBb
+    private static boolean pA() {
+        if (pa()) {  // a로 시작할 경우,
+            return (pB() && pb());  // 이후 Bb 형태여야 함
+        }
+
+        if (pb()) {  // b로 시작할 경우,
+            return (pB() && pb());  // 이후 Bb 형태여야 함
+        }
+
+        if (pc()) {  // c로 시작할 경우,
+            return (pB() && pb());  // 이후 Bb 형태여야 함
+        }
+
+        return false;
+    }
+
+    // Non-Terminal Symbol `B`에 대한 procedure
+    // B -> d | e | f
+    private static boolean pB() {
+        return (pd() || pe() || pf());  // Symbol이 d, e, f 중 하나이면 성공
+    }
+
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
