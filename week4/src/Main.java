@@ -15,6 +15,10 @@ public class Main {
     private static final char TOKEN_e = 'e';
     private static final char TOKEN_f = 'f';
 
+    // Result message
+    private static final String ACCEPT = "OK";
+    private static final String ERROR = "FAIL";
+
     // 문자열의 끝에 도달했는지 확인하는 메서드
     private static boolean isEnd() {
         return index >= input.length();
@@ -30,9 +34,9 @@ public class Main {
 
     // 다음 문자로 이동하는 메서드
     private static void nextSymbol() {
-        System.out.print("[debug] current: " + input.charAt(index));
+        System.out.print("[debug] current: " + currentSymbol());
         index++;
-        System.out.println(" → next: " + input.charAt(index));
+        System.out.println(" → next: " + currentSymbol());
     }
 
     // Terminal Symbol `a`에 대한 procedure
@@ -127,20 +131,35 @@ public class Main {
         return (pd() || pe() || pf());  // Symbol이 d, e, f 중 하나이면 성공
     }
 
+    // 시작 규칙 S를 호출하여 파싱을 시작하는 메서드
+    private static boolean parse() {
+        index = 0;  // index 전역변수 초기화
+        return (pS() && isEnd());
+    }
+
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         StringBuilder sb = new StringBuilder();
 
+        // CFG 출력
         sb.append("CFG:").append("\n");
         sb.append("\t").append("S -> aA | bB").append("\n");
         sb.append("\t").append("A -> aBb | bBb | cBb").append("\n");
         sb.append("\t").append("B -> d | e | f").append("\n\n");
 
+        // 문자열 입력
         sb.append("input: ");
         System.out.print(sb.toString());
-
         input = br.readLine();
         br.close();
+
+        System.out.println();
+        // 파서 실행
+        if (parse()) {
+            System.out.println(ACCEPT);
+        } else {
+            System.out.println(ERROR);
+        }
     }
 }
