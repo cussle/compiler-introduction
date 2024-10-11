@@ -35,13 +35,15 @@ public class Main {
 
     // 다음 문자로 이동하는 메서드
     private static void nextSymbol() {
-        if (DEBUG)
+        if (DEBUG) {
             System.out.print("[debug] current: " + currentSymbol());
+        }
 
         index++;
 
-        if (DEBUG)
+        if (DEBUG) {
             System.out.println(" → next: " + currentSymbol());
+        }
     }
 
     // Terminal Symbol `a`에 대한 procedure
