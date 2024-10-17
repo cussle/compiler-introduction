@@ -85,4 +85,14 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
         }
         r4Tree.put(ctx, expr);
     }
+
+    // 리터럴 & ID 처리
+    @Override
+    public void exitFactor(tinyR4Parser.FactorContext ctx) {
+        if (ctx.literal() != null) {
+            r4Tree.put(ctx, ctx.literal().getText());
+        } else if (ctx.id() != null) {
+            r4Tree.put(ctx, ctx.id().getText());
+        }
+    }
 }
