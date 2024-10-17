@@ -61,4 +61,28 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
         compoudStmt.append("}\n");
         r4Tree.put(ctx, compoudStmt.toString());
     }
+
+    // 사칙 연산 처리
+    @Override
+    public void exitAdditive_expr(tinyR4Parser.Additive_exprContext ctx) {
+        String expr = "";
+        if (ctx.left != null) {  // 왼쪽 피연산자가 존재할 경우, 연산자를 기준으로 각각 처리
+            expr = r4Tree.get(ctx.left) + " " + ctx.op.getText() + " " + r4Tree.get(ctx.right);
+        } else {  // 단일 항일 경우 그대로 처리
+            expr = r4Tree.get(ctx.multiplicative_expr());
+        }
+        r4Tree.put(ctx, expr);
+    }
+
+    // 곱셈 expr을 방문하여 곱셈, 나눗셈, 모듈러 연산 처리
+    @Override
+    public void exitMultiplicative_expr(tinyR4Parser.Multiplicative_exprContext ctx) {
+        String expr = "";
+        if (ctx.left != null) {  // 왼쪽 피연산자가 존재할 경우, 연산자를 기준으로 각각 처리
+            expr = r4Tree.get(ctx.left) + " " + ctx.op.getText() + " " + r4Tree.get(ctx.right);
+        } else {  // 단일 항일 경우 그대로 처리
+            expr = r4Tree.get(ctx.unary_expr());
+        }
+        r4Tree.put(ctx, expr);
+    }
 }
