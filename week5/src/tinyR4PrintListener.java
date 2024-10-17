@@ -23,4 +23,30 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
         }
         output = program.toString();
     }
+
+    // 함수 decl을 방문하여 함수 처리
+    @Override
+    public void exitFun_decl(tinyR4Parser.Fun_declContext ctx) {
+        StringBuilder function = new StringBuilder("fn " + ctx.id().getText() + "(");
+
+        // 함수의 파라미터 처리
+        if (ctx.params() != null && ctx.params().param() != null) {
+            for (int i = 0; i < ctx.params().param().size(); i++) {
+                if (i > 0) {
+                    function.append(", ");
+                }
+                function.append(ctx.params().param(i).id().getText()).append(": ")
+                    .append(ctx.params().param(i).type_spec().getText());
+            }
+        }
+        function.append(") ");
+
+        // 함수의 리턴 처리
+        if (ctx.ret_type_spec() != null && ctx.ret_type_spec().type_spec() != null) {
+            function.append("-> ").append(ctx.ret_type_spec().type_spec().getText()).append(" ");
+        }
+
+        function.append(r4Tree.get(ctx.compound_stmt())).append("\n");
+        r4Tree.put(ctx, function.toString());
+    }
 }
