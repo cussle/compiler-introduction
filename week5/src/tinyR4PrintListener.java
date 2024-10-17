@@ -95,4 +95,11 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
             r4Tree.put(ctx, ctx.id().getText());
         }
     }
+
+    // 표현식 마무리 처리 (세미콜론 추가)
+    @Override
+    public void exitExpr_stmt(tinyR4Parser.Expr_stmtContext ctx) {
+        String stmt = r4Tree.get(ctx.expr()) + ";";
+        r4Tree.put(ctx, stmt);
+    }
 }
