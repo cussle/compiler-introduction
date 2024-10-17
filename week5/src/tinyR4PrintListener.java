@@ -53,13 +53,16 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
     // 복합 stmt 처리
     @Override
     public void exitCompound_stmt(tinyR4Parser.Compound_stmtContext ctx) {
-        StringBuilder compoudStmt = new StringBuilder();
-        compoudStmt.append("{\n");
+        StringBuilder compoundStmt = new StringBuilder();
+        compoundStmt.append("{\n");
         for (int i = 0; i < ctx.stmt().size(); i++) {
-            compoudStmt.append(r4Tree.get(ctx.stmt(i))).append("\n");
+            String stmt = r4Tree.get(ctx.stmt(i));
+            if (stmt != null) {
+                compoundStmt.append(stmt).append("\n");
+            }
         }
-        compoudStmt.append("}\n");
-        r4Tree.put(ctx, compoudStmt.toString());
+        compoundStmt.append("}\n");
+        r4Tree.put(ctx, compoundStmt.toString());
     }
 
     // 사칙 연산 처리
