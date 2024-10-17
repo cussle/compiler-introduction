@@ -5,104 +5,198 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
 public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTreeListener {
 
-    private static String output;  // 프로그램의 출력 결과
-    ParseTreeProperty<String> r4Tree = new ParseTreeProperty<>();  // 파스트리의 각각의 노드 값을 저장
+    private static String output;  // 프로그램의 최종 출력 결과
+    ParseTreeProperty<String> r4Tree = new ParseTreeProperty<>();  // 각 구문 노드의 문자열 저장
 
-    // 파싱 결과를 얻기 위한 static 메서드
+    // 파싱 결과를 반환하는 getter 메서드
     public static String getOutput() {
         return output;
     }
 
-    // 프로그램 전체를 방문한 후 decl을 처리하여 output을 설정
+    // program 규칙에 대한 exit 메서드
     @Override
     public void exitProgram(tinyR4Parser.ProgramContext ctx) {
         StringBuilder program = new StringBuilder();
+
+        // 모든 선언을 문자열로 추가
         for (int i = 0; i < ctx.decl().size(); i++) {
-            // 각 decl의 출력을 가져와 문자열에 추가
-            program.append(r4Tree.get(ctx.decl(i)));
+            String decl = r4Tree.get(ctx.decl(i));
+            if (decl != null) {
+                program.append(decl).append("\n");
+            }
         }
+
+        // 최종 프로그램 문자열을 저장
         output = program.toString();
     }
 
-    // 함수 decl을 방문하여 함수 처리
+    // decl 규칙에 대한 exit 메서드
     @Override
-    public void exitFun_decl(tinyR4Parser.Fun_declContext ctx) {
-        StringBuilder function = new StringBuilder("fn " + ctx.id().getText() + "(");
-
-        // 함수의 파라미터 처리
-        if (ctx.params() != null && ctx.params().param() != null) {
-            for (int i = 0; i < ctx.params().param().size(); i++) {
-                if (i > 0) {
-                    function.append(", ");
-                }
-                function.append(ctx.params().param(i).id().getText()).append(": ")
-                    .append(ctx.params().param(i).type_spec().getText());
+    public void exitDecl(tinyR4Parser.DeclContext ctx) {
+        if (ctx.fun_decl() != null) {
+            String funDecl = r4Tree.get(ctx.fun_decl());
+            if (funDecl != null) {
+                r4Tree.put(ctx, funDecl);
             }
         }
-        function.append(") ");
-
-        // 함수의 리턴 처리
-        if (ctx.ret_type_spec() != null && ctx.ret_type_spec().type_spec() != null) {
-            function.append("-> ").append(ctx.ret_type_spec().type_spec().getText()).append(" ");
-        }
-
-        function.append(r4Tree.get(ctx.compound_stmt())).append("\n");
-        r4Tree.put(ctx, function.toString());
     }
 
-    // 복합 stmt 처리
+    // fun_decl 규칙에 대한 exit 메서드
+    @Override
+    public void exitFun_decl(tinyR4Parser.Fun_declContext ctx) {
+        // 함수의 이름
+        String funcName = ctx.id().getText();
+
+        // 함수의 파라미터
+        String params = "";
+        if (!ctx.params().param().isEmpty()) {
+            params = r4Tree.get(ctx.params());
+        }
+
+        // 함수의 리턴 타입
+        String retType = "";
+        if (ctx.ret_type_spec().type_spec() != null) {
+            retType = " -> " + r4Tree.get(ctx.ret_type_spec());
+        }
+
+        // 함수의 본문
+        String compoundStmt = r4Tree.get(ctx.compound_stmt());
+
+        // 함수 선언 문자열 생성
+        String funcDecl = "fn " + funcName + "(" + params + ")" + retType + " " + compoundStmt;
+        r4Tree.put(ctx, funcDecl);
+    }
+
+    // params 규칙에 대한 exit 메서드
+    @Override
+    public void exitParams(tinyR4Parser.ParamsContext ctx) {
+        StringBuilder params = new StringBuilder();
+
+        // 모든 파라미터를 문자열로 추가
+        for (int i = 0; i < ctx.param().size(); i++) {
+            if (i > 0) {
+                params.append(", ");
+            }
+            params.append(r4Tree.get(ctx.param(i)));
+        }
+        r4Tree.put(ctx, params.toString());
+    }
+
+    // param 규칙에 대한 exit 메서드
+    @Override
+    public void exitParam(tinyR4Parser.ParamContext ctx) {
+        // 파라미터를 < id: type_spec > 형태로 추가
+        String param = ctx.id().getText() + ": " + ctx.type_spec().getText();
+        r4Tree.put(ctx, param);
+    }
+
+    // ret_type_spec 규칙에 대한 exit 메서드
+    @Override
+    public void exitRet_type_spec(tinyR4Parser.Ret_type_specContext ctx) {
+        if (ctx.type_spec() != null) {
+            r4Tree.put(ctx, ctx.type_spec().getText());
+        }
+    }
+
+    // compound_stmt 규칙에 대한 exit 메서드
     @Override
     public void exitCompound_stmt(tinyR4Parser.Compound_stmtContext ctx) {
         StringBuilder compoundStmt = new StringBuilder();
         compoundStmt.append("{\n");
+
+        // 모든 stmt를 문자열로 추가
         for (int i = 0; i < ctx.stmt().size(); i++) {
             String stmt = r4Tree.get(ctx.stmt(i));
             if (stmt != null) {
                 compoundStmt.append(stmt).append("\n");
             }
         }
-        compoundStmt.append("}\n");
+        compoundStmt.append("}");
         r4Tree.put(ctx, compoundStmt.toString());
     }
 
-    // 사칙 연산 처리
+    // stmt 규칙에 대한 exit 메서드
     @Override
-    public void exitAdditive_expr(tinyR4Parser.Additive_exprContext ctx) {
-        String expr = "";
-        if (ctx.left != null) {  // 왼쪽 피연산자가 존재할 경우, 연산자를 기준으로 각각 처리
-            expr = r4Tree.get(ctx.left) + " " + ctx.op.getText() + " " + r4Tree.get(ctx.right);
-        } else {  // 단일 항일 경우 그대로 처리
-            expr = r4Tree.get(ctx.multiplicative_expr());
-        }
-        r4Tree.put(ctx, expr);
-    }
-
-    // 곱셈 expr을 방문하여 곱셈, 나눗셈, 모듈러 연산 처리
-    @Override
-    public void exitMultiplicative_expr(tinyR4Parser.Multiplicative_exprContext ctx) {
-        String expr = "";
-        if (ctx.left != null) {  // 왼쪽 피연산자가 존재할 경우, 연산자를 기준으로 각각 처리
-            expr = r4Tree.get(ctx.left) + " " + ctx.op.getText() + " " + r4Tree.get(ctx.right);
-        } else {  // 단일 항일 경우 그대로 처리
-            expr = r4Tree.get(ctx.unary_expr());
-        }
-        r4Tree.put(ctx, expr);
-    }
-
-    // 리터럴 & ID 처리
-    @Override
-    public void exitFactor(tinyR4Parser.FactorContext ctx) {
-        if (ctx.literal() != null) {
-            r4Tree.put(ctx, ctx.literal().getText());
-        } else if (ctx.id() != null) {
-            r4Tree.put(ctx, ctx.id().getText());
+    public void exitStmt(tinyR4Parser.StmtContext ctx) {
+        if (ctx.expr_stmt() != null) {
+            String exprStmt = r4Tree.get(ctx.expr_stmt());
+            if (exprStmt != null) {
+                r4Tree.put(ctx, exprStmt);
+            }
         }
     }
 
-    // 표현식 마무리 처리 (세미콜론 추가)
+    // expr_stmt 규칙에 대한 exit 메서드
     @Override
     public void exitExpr_stmt(tinyR4Parser.Expr_stmtContext ctx) {
-        String stmt = r4Tree.get(ctx.expr()) + ";";
-        r4Tree.put(ctx, stmt);
+        String expr = r4Tree.get(ctx.expr());
+        if (expr != null) {
+            // 표현식에 세미콜론 추가
+            r4Tree.put(ctx, expr + ";");
+        }
+    }
+
+    // expr 규칙에 대한 exit 메서드
+    @Override
+    public void exitExpr(tinyR4Parser.ExprContext ctx) {
+        if (ctx.additive_expr() != null) {
+            r4Tree.put(ctx, r4Tree.get(ctx.additive_expr()));
+        }
+    }
+
+    // additive_expr 규칙에 대한 exit 메서드
+    @Override
+    public void exitAdditive_expr(tinyR4Parser.Additive_exprContext ctx) {
+        if (ctx.op != null) {  // 다중 항의 경우 각각 처리
+            String left = r4Tree.get(ctx.left);
+            String right = r4Tree.get(ctx.right);
+            if (left != null && right != null) {
+                String expr = left + " " + ctx.op.getText() + " " + right;
+                r4Tree.put(ctx, expr);
+            }
+        } else {  // 단일 항의 경우 그대로 처리
+            r4Tree.put(ctx, r4Tree.get(ctx.multiplicative_expr()));
+        }
+    }
+
+    // multiplicative_expr 규칙에 대한 exit 메서드
+    @Override
+    public void exitMultiplicative_expr(tinyR4Parser.Multiplicative_exprContext ctx) {
+        if (ctx.op != null) {  // 다중 항의 경우 각각 처리
+            String left = r4Tree.get(ctx.left);
+            String right = r4Tree.get(ctx.right);
+            if (left != null && right != null) {
+                String expr = left + " " + ctx.op.getText() + " " + right;
+                r4Tree.put(ctx, expr);
+            }
+        } else {  // 단일 항의 경우 그대로 처리
+            r4Tree.put(ctx, r4Tree.get(ctx.unary_expr()));
+        }
+    }
+
+    // unary_expr 규칙에 대한 exit 메서드
+    @Override
+    public void exitUnary_expr(tinyR4Parser.Unary_exprContext ctx) {
+        if (ctx.op != null) {  // op + expr 형태의 경우
+            String expr = ctx.op.getText() + r4Tree.get(ctx.expr());
+            r4Tree.put(ctx, expr);
+        } else {  // factor 의 형태일 경우
+            r4Tree.put(ctx, r4Tree.get(ctx.factor()));
+        }
+    }
+
+    // factor 규칙에 대한 exit 메서드
+    @Override
+    public void exitFactor(tinyR4Parser.FactorContext ctx) {
+        if (ctx.literal() != null) {  // literal 형태
+            r4Tree.put(ctx, ctx.literal().getText());
+        } else if (ctx.id() != null) {    // id 형태
+            r4Tree.put(ctx, ctx.id().getText());
+        } else if (ctx.expr() != null) {  // expr 형태 (괄호)
+            String expr = r4Tree.get(ctx.expr());
+            if (expr != null) {
+                r4Tree.put(ctx, "(" + expr + ")");
+            }
+        }
     }
 }
