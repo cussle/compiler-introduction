@@ -55,10 +55,30 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
     // 매개변수(params) 규칙의 exit 메서드
     @Override
     public void exitParams(tinyR4Parser.ParamsContext ctx) {
-        int count = ctx.getChildCount();
-        if (count == 0) {
-            r4Tree.put(ctx, "");  // 매개변수가 없는 경우 빈 문자열로 설정
+        StringBuilder params = new StringBuilder();
+
+        // 모든 파라미터를 문자열로 추가
+        for (int i = 0; i < ctx.param().size(); i++) {
+            if (i > 0) {
+                params.append(", ");
+            }
+            params.append(r4Tree.get(ctx.param(i)));
         }
+        r4Tree.put(ctx, params.toString());
+    }
+
+    // param 규칙에 대한 exit 메서드
+    @Override
+    public void exitParam(tinyR4Parser.ParamContext ctx) {
+        // 파라미터를 < id: type_spec > 형태로 추가
+        String param = ctx.id().getText() + ": " + ctx.type_spec().getText();
+        r4Tree.put(ctx, param);
+    }
+
+    // 타입(type_spec) 규칙의 exit 메서드
+    @Override
+    public void exitType_spec(tinyR4Parser.Type_specContext ctx) {
+        r4Tree.put(ctx, ctx.U32().getText());  // 타입 문자열 (u32) 처리 후 저장
     }
 
     // 반환 타입(ret_type_spec) 규칙의 exit 메서드
@@ -211,7 +231,17 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
             if (ctx.literal() != null) {  // 리터럴이 있는 경우
                 result = r4Tree.get(ctx.literal());  // 리터럴 값
             } else {  // 리터럴이 없는 경우
-                result = r4Tree.get(ctx.id());  // 식별자 값
+                result = r4Tree.get(ctx.id());
+
+                // 매크로 호출 처리
+                if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("!")) {
+                    result += "!";  // 함수 호출 뒤에 느낌표 추가
+                }
+
+                // 함수 호출에 인자가 있는 경우 처리
+                if (ctx.args() != null) {
+                    result += "(" + r4Tree.get(ctx.args()) + ")";
+                }
             }
         }
         r4Tree.put(ctx, result);
@@ -245,6 +275,22 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
             result = r4Tree.get(ctx.additive_expr());  // 덧셈 표현식 결과를 가져옴
         }
         r4Tree.put(ctx, result);
+    }
+
+    // 인자 목록(args) 규칙의 exit 메서드
+    @Override
+    public void exitArgs(tinyR4Parser.ArgsContext ctx) {
+        StringBuilder args = new StringBuilder();
+
+        // 각 인자를 쉼표로 구분하여 처리
+        for (int i = 0; i < ctx.expr().size(); i++) {
+            if (i > 0) {
+                args.append(", ");
+            }
+            args.append(r4Tree.get(ctx.expr(i)));
+        }
+
+        r4Tree.put(ctx, args.toString());
     }
 
     // 리터럴(literal) 규칙의 exit 메서드
