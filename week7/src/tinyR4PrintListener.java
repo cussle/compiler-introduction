@@ -5,11 +5,19 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
 public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTreeListener {
 
-    private static String output;
-    ParseTreeProperty<String> r4Tree = new ParseTreeProperty<>();
+    private static final int INDENT = 4;  // 들여쓰기 크기: 4칸
+    private int indentCnt = 0;  // 현재 들여쓰기 횟수를 카운트
+    private static String output;  // 프로그램의 최종 출력 결과
+    ParseTreeProperty<String> r4Tree = new ParseTreeProperty<>();  // 각 구문 노드의 문자열 저장
 
+    // 파싱 결과를 반환하는 getter 메서드
     public static String getOutput() {
         return output;
+    }
+
+    // 현재 들여쓰기 횟수에 맞는 공백 문자열을 반환하는 getter 메서드
+    private String getIndent() {
+        return " ".repeat(indentCnt * INDENT);
     }
 
     @Override
