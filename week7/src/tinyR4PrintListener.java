@@ -136,6 +136,8 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
             result = r4Tree.get(ctx.for_stmt());
         } else if (ctx.return_stmt() != null) {  // return 문인 경우
             result = r4Tree.get(ctx.return_stmt());
+        } else if (ctx.loop_stmt() != null) {  // loop 문인 경우
+            result = r4Tree.get(ctx.loop_stmt());
         }
         r4Tree.put(ctx, result);
     }
@@ -295,6 +297,18 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
         // for 블록 추가
         result.append(" ");
         result.append(r4Tree.get(ctx.compound_stmt()));
+
+        r4Tree.put(ctx, result.toString());
+    }
+
+    // loop 문(loop_stmt)의 exit 메서드
+    @Override
+    public void exitLoop_stmt(tinyR4Parser.Loop_stmtContext ctx) {
+        StringBuilder result = new StringBuilder();
+
+        // "loop" 키워드와 루프 본문 추가
+        result.append("loop ");
+        result.append(r4Tree.get(ctx.compound_stmt()));  // 루프 본문 처리
 
         r4Tree.put(ctx, result.toString());
     }
