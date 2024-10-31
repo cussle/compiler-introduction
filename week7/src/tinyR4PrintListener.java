@@ -132,30 +132,10 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
             result = r4Tree.get(ctx.compound_stmt());
         } else if (ctx.if_stmt() != null) {  // if 문인 경우
             result = r4Tree.get(ctx.if_stmt());
+        } else if (ctx.for_stmt() != null) {  // for 문인 경우
+            result = r4Tree.get(ctx.for_stmt());
         }
-            r4Tree.put(ctx, result);
-    }
-
-    // if 문(if_stmt)의 exit 메서드
-    @Override
-    public void exitIf_stmt(tinyR4Parser.If_stmtContext ctx) {
-        StringBuilder result = new StringBuilder();
-
-        // "if" 키워드와 조건식 추가
-        result.append("if ");
-        result.append(r4Tree.get(ctx.relative_expr()));  // 조건식 처리
-
-        // if 블록 추가
-        result.append(" ");
-        result.append(r4Tree.get(ctx.compound_stmt(0)));
-
-        // else 블록이 있는 경우 처리
-        if (ctx.ELSE() != null) {
-            result.append(" else ");
-            result.append(r4Tree.get(ctx.compound_stmt(1)));  // else 블록 처리
-        }
-
-        r4Tree.put(ctx, result.toString());
+        r4Tree.put(ctx, result);
     }
 
     // 표현식 문장(expr_stmt)의 exit 메서드
@@ -275,6 +255,66 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
             result = r4Tree.get(ctx.additive_expr());  // 덧셈 표현식 결과를 가져옴
         }
         r4Tree.put(ctx, result);
+    }
+
+    // if 문(if_stmt)의 exit 메서드
+    @Override
+    public void exitIf_stmt(tinyR4Parser.If_stmtContext ctx) {
+        StringBuilder result = new StringBuilder();
+
+        // "if" 키워드와 조건식 추가
+        result.append("if ");
+        result.append(r4Tree.get(ctx.relative_expr()));  // 조건식 처리
+
+        // if 블록 추가
+        result.append(" ");
+        result.append(r4Tree.get(ctx.compound_stmt(0)));
+
+        // else 블록이 있는 경우 처리
+        if (ctx.ELSE() != null) {
+            result.append(" else ");
+            result.append(r4Tree.get(ctx.compound_stmt(1)));  // else 블록 처리
+        }
+
+        r4Tree.put(ctx, result.toString());
+    }
+
+    // for 문(for_stmt)의 exit 메서드
+    @Override
+    public void exitFor_stmt(tinyR4Parser.For_stmtContext ctx) {
+        StringBuilder result = new StringBuilder();
+
+        // "for" 키워드와 반복 변수 및 범위 추가
+        result.append("for ");
+        result.append(r4Tree.get(ctx.id()));  // 반복 변수
+        result.append(" in ");
+        result.append(r4Tree.get(ctx.range()));  // 반복 범위
+
+        // for 블록 추가
+        result.append(" ");
+        result.append(r4Tree.get(ctx.compound_stmt()));
+
+        r4Tree.put(ctx, result.toString());
+    }
+
+    // 반복 범위(range)의 exit 메서드
+    @Override
+    public void exitRange(tinyR4Parser.RangeContext ctx) {
+        StringBuilder result = new StringBuilder();
+
+        // 범위의 시작 리터럴
+        result.append(r4Tree.get(ctx.literal(0)));
+        result.append("..");  // 범위 연산자 추가
+
+        // 범위의 "=" 고려
+        if (ctx.getChildCount() == 4) {
+            result.append("=");
+        }
+
+        // 범위의 끝 리터럴 추가
+        result.append(r4Tree.get(ctx.literal(1)));
+
+        r4Tree.put(ctx, result.toString());
     }
 
     // 인자 목록(args) 규칙의 exit 메서드
