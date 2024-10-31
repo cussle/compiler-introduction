@@ -106,10 +106,36 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
     @Override
     public void exitStmt(tinyR4Parser.StmtContext ctx) {
         String result = "";
-        if (ctx.expr_stmt() != null) {
-            result = r4Tree.get(ctx.expr_stmt());  // 표현식 문장을 처리하고 결과에 추가
+        if (ctx.expr_stmt() != null) {  // 표현식 문장을 처리하고 결과에 추가
+            result = r4Tree.get(ctx.expr_stmt());
+        } else if (ctx.compound_stmt() != null) {  // 복합 문장인 경우
+            result = r4Tree.get(ctx.compound_stmt());
+        } else if (ctx.if_stmt() != null) {  // if 문인 경우
+            result = r4Tree.get(ctx.if_stmt());
         }
-        r4Tree.put(ctx, result);
+            r4Tree.put(ctx, result);
+    }
+
+    // if 문(if_stmt)의 exit 메서드
+    @Override
+    public void exitIf_stmt(tinyR4Parser.If_stmtContext ctx) {
+        StringBuilder result = new StringBuilder();
+
+        // "if" 키워드와 조건식 추가
+        result.append("if ");
+        result.append(r4Tree.get(ctx.relative_expr()));  // 조건식 처리
+
+        // if 블록 추가
+        result.append(" ");
+        result.append(r4Tree.get(ctx.compound_stmt(0)));
+
+        // else 블록이 있는 경우 처리
+        if (ctx.ELSE() != null) {
+            result.append(" else ");
+            result.append(r4Tree.get(ctx.compound_stmt(1)));  // else 블록 처리
+        }
+
+        r4Tree.put(ctx, result.toString());
     }
 
     // 표현식 문장(expr_stmt)의 exit 메서드

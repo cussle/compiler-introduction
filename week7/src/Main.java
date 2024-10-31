@@ -21,9 +21,9 @@ public class Main {
 
         // walker를 사용해 파스트리를 순회하며 listener가 이벤트를 처리하도록 함
         ParseTreeWalker walker = new ParseTreeWalker();
-        walker.walk(new tinyR4UglyPrintListener(), tree);
+        walker.walk(new tinyR4PrintListener(), tree);
 
         // 파싱 결과 출력
-        System.out.println(tinyR4UglyPrintListener.getOutput());
+        System.out.println(tinyR4PrintListener.getOutput());
     }
 }

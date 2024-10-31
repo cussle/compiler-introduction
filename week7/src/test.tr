@@ -1,7 +1,10 @@
 fn main() {
-  a + b;
-  c - d;
-  10 * 20;
-  40 / 2;
-  a + 3 - 2 / 5 * 10;
+  if a == 4 {
+    println!("hello");
+  }
+  if 0 < 0 {
+    println!("good");
+  } else {
+    println!("test");
+  }
 }
