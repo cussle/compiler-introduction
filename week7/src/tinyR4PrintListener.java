@@ -110,6 +110,39 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
         r4Tree.put(ctx, "{" + result + "}");
     }
 
+    // 변수 선언(local_decl)의 exit 메서드
+    @Override
+    public void exitLocal_decl(tinyR4Parser.Local_declContext ctx) {
+        StringBuilder result = new StringBuilder();
+
+        result.append(r4Tree.get(ctx.dec_spec())).append(" ");  // dec_spec 처리
+        result.append(ctx.id().getText());  // 변수 이름 추가
+
+        // 타입이 있는 경우 처리
+        if (ctx.type_spec() != null) {
+            result.append(": ").append(r4Tree.get(ctx.type_spec()));
+        }
+
+        // 값 할당 처리
+        result.append(" = ").append(r4Tree.get(ctx.val())).append(";");
+
+        r4Tree.put(ctx, result.toString());
+    }
+
+    // 선언 사양(dec_spec) 규칙의 exit 메서드
+    @Override
+    public void exitDec_spec(tinyR4Parser.Dec_specContext ctx) {
+        StringBuilder decSpec = new StringBuilder();
+
+        // "let" 키워드 추가
+        decSpec.append("let");
+        if (ctx.MUT() != null) {  // 가변 변수이면 "mut" 추가
+            decSpec.append(" mut");
+        }
+
+        r4Tree.put(ctx, decSpec.toString());
+    }
+
     // 값(val) 규칙의 exit 메서드
     @Override
     public void exitVal(tinyR4Parser.ValContext ctx) {
