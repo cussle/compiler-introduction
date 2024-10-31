@@ -134,6 +134,8 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
             result = r4Tree.get(ctx.if_stmt());
         } else if (ctx.for_stmt() != null) {  // for 문인 경우
             result = r4Tree.get(ctx.for_stmt());
+        } else if (ctx.return_stmt() != null) {  // return 문인 경우
+            result = r4Tree.get(ctx.return_stmt());
         }
         r4Tree.put(ctx, result);
     }
@@ -314,6 +316,24 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
         // 범위의 끝 리터럴 추가
         result.append(r4Tree.get(ctx.literal(1)));
 
+        r4Tree.put(ctx, result.toString());
+    }
+
+    // return 문(return_stmt)의 exit 메서드
+    @Override
+    public void exitReturn_stmt(tinyR4Parser.Return_stmtContext ctx) {
+        StringBuilder result = new StringBuilder();
+
+        // "return" 키워드 추가
+        result.append("return");
+
+        // 반환 값이 있는 경우 추가
+        if (ctx.expr() != null) {
+            result.append(" ");
+            result.append(r4Tree.get(ctx.expr()));  // 반환 표현식 처리
+        }
+
+        result.append(";");  // 세미콜론 추가
         r4Tree.put(ctx, result.toString());
     }
 
