@@ -49,7 +49,7 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
         String params = r4Tree.get(ctx.params());  // 매개변수 목록
         String ret_type_spec = r4Tree.get(ctx.ret_type_spec());  // 반환 타입
         String compound_stmt = r4Tree.get(ctx.compound_stmt());  // 함수 본문
-        r4Tree.put(ctx, fun + " " + id + "(" + params + ") " + ret_type_spec + compound_stmt);
+        r4Tree.put(ctx, fun + " " + id + "(" + params + ")" + ret_type_spec + compound_stmt);
     }
 
     // 매개변수(params) 규칙의 exit 메서드
@@ -85,7 +85,7 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
     @Override
     public void exitRet_type_spec(tinyR4Parser.Ret_type_specContext ctx) {
         if (ctx.type_spec() != null) {
-            r4Tree.put(ctx, "-> " + r4Tree.get(ctx.type_spec()));  // 반환 타입이 있을 때 처리
+            r4Tree.put(ctx, " -> " + r4Tree.get(ctx.type_spec()));  // 반환 타입이 있을 때 처리
         } else {
             r4Tree.put(ctx, "");  // 반환 타입이 없는 경우 빈 문자열로 설정
         }
@@ -322,7 +322,6 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
         result.append(r4Tree.get(ctx.relative_expr()));  // 조건식 처리
 
         // if 블록 추가
-        result.append(" ");
         result.append(r4Tree.get(ctx.compound_stmt(0)));
 
         // else 블록이 있는 경우 처리
@@ -346,7 +345,6 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
         result.append(r4Tree.get(ctx.range()));  // 반복 범위
 
         // for 블록 추가
-        result.append(" ");
         result.append(r4Tree.get(ctx.compound_stmt()));
 
         r4Tree.put(ctx, result.toString());

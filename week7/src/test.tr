@@ -1,14 +1,12 @@
 fn main() {
-  let c = a;
-  a + b;
+  let a = 3;
+let b = 4;
+        c = a + b;
+  d = 3 - (4 + 5);
+println!(c);
+println!("Hello World");
+}
 
-  if (a < 10) {
-  println!("a");
-  } else {
-println!(123);
-  }
-  for i in 1..4 {
-  println!(i);
-  }
-  return 0;
+fn sum(a:u32, b:u32) -> u32 {
+return a + b;
 }
