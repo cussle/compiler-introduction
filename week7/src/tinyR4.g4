@@ -12,7 +12,7 @@ params		:
 
 param		:  id ':' type_spec 		;
 
-type_spec	:  U32				    ; 
+type_spec	:  U32				    ;
 
 ret_type_spec	:
 		| RARROW type_spec
@@ -22,7 +22,7 @@ compound_stmt: '{' local_decl* stmt* '}'	;
 
 local_decl	: dec_spec id  (':' type_spec)? '=' val ';' ;
 
-dec_spec	: LET (MUT)?            ; 
+dec_spec	: LET (MUT)?            ;
 
 val 		: literal
                 | id

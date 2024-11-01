@@ -84,7 +84,9 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
     // 반환 타입(ret_type_spec) 규칙의 exit 메서드
     @Override
     public void exitRet_type_spec(tinyR4Parser.Ret_type_specContext ctx) {
-        if (ctx.getChildCount() == 0) {
+        if (ctx.type_spec() != null) {
+            r4Tree.put(ctx, "-> " + r4Tree.get(ctx.type_spec()));  // 반환 타입이 있을 때 처리
+        } else {
             r4Tree.put(ctx, "");  // 반환 타입이 없는 경우 빈 문자열로 설정
         }
     }
