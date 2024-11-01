@@ -194,6 +194,10 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
             result = r4Tree.get(ctx.additive_expr());
         } else if (ctx.relative_expr() != null) {  // 논리 표현식이 있는 경우
             result = r4Tree.get(ctx.relative_expr());
+        } else if (ctx.getChildCount() == 3 && ctx.getChild(1).getText().equals("=")) {  // 할당식(=)이 있는 경우
+            String id = r4Tree.get(ctx.id());  // 식별자
+            String expr = r4Tree.get(ctx.expr());  // 오른쪽의 표현식
+            result = id + " = " + expr;
         }
         r4Tree.put(ctx, result);
     }
