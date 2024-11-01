@@ -92,7 +92,8 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
     }
 
     // 복합 구문(compound_stmt)의 enter 메서드
-    @Override public void enterCompound_stmt(tinyR4Parser.Compound_stmtContext ctx) {
+    @Override
+    public void enterCompound_stmt(tinyR4Parser.Compound_stmtContext ctx) {
         indentCnt++;  // 복합 구문에 진입할 때 indent 증가
     }
 
