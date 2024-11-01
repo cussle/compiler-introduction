@@ -250,23 +250,21 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
     @Override
     public void exitFactor(tinyR4Parser.FactorContext ctx) {
         String result = "";
-        if (ctx.expr() != null) {  // 표현식이 괄호로 감싸진 경우
+        if (ctx.expr() != null) {
             result = "(" + r4Tree.get(ctx.expr()) + ")";
-        } else {
-            if (ctx.literal() != null) {  // 리터럴이 있는 경우
-                result = r4Tree.get(ctx.literal());  // 리터럴 값
-            } else {  // 리터럴이 없는 경우
-                result = r4Tree.get(ctx.id());
+        } else if (ctx.literal() != null) {
+            result = r4Tree.get(ctx.literal());
+        } else if (ctx.id() != null) {
+            result = r4Tree.get(ctx.id());
 
-                // 매크로 호출 처리
-                if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("!")) {
-                    result += "!";  // 함수 호출 뒤에 느낌표 추가
-                }
+            // 매크로 호출 처리
+            if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("!")) {
+                result += "!";
+            }
 
-                // 함수 호출에 인자가 있는 경우 처리
-                if (ctx.args() != null) {
-                    result += "(" + r4Tree.get(ctx.args()) + ")";
-                }
+            // 함수 호출에 인자가 있는 경우
+            if (ctx.args() != null) {
+                result += "(" + r4Tree.get(ctx.args()) + ")";
             }
         }
         r4Tree.put(ctx, result);
@@ -276,7 +274,7 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
     @Override
     public void exitRelative_expr(tinyR4Parser.Relative_exprContext ctx) {
         String result = "";
-        if (ctx.relative_expr() != null) {  // 논리 표현식이 중첩된 경우
+        if (ctx.relative_expr() != null && ctx.comparative_expr() != null) {  // 논리 표현식이 중첩된 경우
             String left = r4Tree.get(ctx.relative_expr());  // 왼쪽 피연산자
             String op = ctx.getChild(1).getText();  // 논리 연산자
             String right = r4Tree.get(ctx.comparative_expr());  // 오른쪽 피연산자
@@ -291,7 +289,7 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
     @Override
     public void exitComparative_expr(tinyR4Parser.Comparative_exprContext ctx) {
         String result = "";
-        if (ctx.comparative_expr() != null) {  // 비교 표현식이 중첩된 경우
+        if (ctx.comparative_expr() != null && ctx.additive_expr() != null) {  // 비교 표현식이 중첩된 경우
             String left = r4Tree.get(ctx.comparative_expr());  // 왼쪽 피연산자
             String op = ctx.getChild(1).getText();  // 비교 연산자
             String right = r4Tree.get(ctx.additive_expr());  // 오른쪽 피연산자
