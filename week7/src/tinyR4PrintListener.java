@@ -27,7 +27,7 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
 
         // 모든 선언을 문자열로 추가
         for (int i = 0; i < ctx.decl().size(); i++) {
-            program.append(r4Tree.get(ctx.decl(i)));
+            program.append(r4Tree.get(ctx.decl(i))).append("\n");
         }
 
         // 최종 프로그램 문자열을 저장
@@ -91,25 +91,37 @@ public class tinyR4PrintListener extends tinyR4BaseListener implements ParseTree
         }
     }
 
+    // 복합 구문(compound_stmt)의 enter 메서드
+    @Override public void enterCompound_stmt(tinyR4Parser.Compound_stmtContext ctx) {
+        indentCnt++;  // 복합 구문에 진입할 때 indent 증가
+    }
+
     // 복합 구문(compound_stmt)의 exit 메서드
     @Override
     public void exitCompound_stmt(tinyR4Parser.Compound_stmtContext ctx) {
         StringBuilder result = new StringBuilder();
+        result.append(" {\n");
 
         // 지역 변수 선언을 처리하여 결과에 추가
         int local_count = ctx.local_decl().size();
         for (int i = 0; i < local_count; i++) {
+            result.append(getIndent());
             result.append(r4Tree.get(ctx.local_decl(i)));
+            result.append("\n");
         }
 
         // 문장을 처리하여 결과에 추가
         int stmt_count = ctx.stmt().size();
         for (int i = 0; i < stmt_count; i++) {
+            result.append(getIndent());
             result.append(r4Tree.get(ctx.stmt(i)));
+            result.append("\n");
         }
 
         // 전체 구문을 중괄호로 감싸고, 변환된 결과를 저장
-        r4Tree.put(ctx, "{" + result + "}");
+        indentCnt--;  // 복합 구문에서 나올 때 indent 감소
+        result.append(getIndent()).append("}");
+        r4Tree.put(ctx, result.toString());
     }
 
     // 변수 선언(local_decl)의 exit 메서드

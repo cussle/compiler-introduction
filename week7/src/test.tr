@@ -1,11 +1,14 @@
-fn foo(num:u32) -> u32 {
-  let result = 0;
-  for i in 0..10 {
-    if (i > (num / 2)) {
-      println!(i);
-      result = i;
-      break;
-    }
+fn main() {
+  let c = a;
+  a + b;
+
+  if (a < 10) {
+  println!("a");
+  } else {
+println!(123);
   }
-  return i;
+  for i in 1..4 {
+  println!(i);
+  }
+  return 0;
 }
