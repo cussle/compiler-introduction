@@ -13,6 +13,7 @@
 6️⃣ 6주차 실습 - 이론 보강 대체<br>
 7️⃣ [7주차 구현](https://github.com/cussle/compiler-introduction/tree/main/week7)<br>
 8️⃣ 8주차 실습 - 중간고사 휴강<br>
+9️⃣ [9주차 구현](https://github.com/cussle/compiler-introduction/tree/main/week9)<br>
 
 ## 기술 스택
 - **Java 21**: [Java 21 Documentation](https://docs.oracle.com/en/java/javase/21/)
