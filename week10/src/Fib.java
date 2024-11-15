@@ -1,6 +1,11 @@
 public class Fib {
 
-    // n번째 피보나치 수를 구하는 메서드
+    // 기본 생성자
+    public Fib() {
+        super();
+    }
+
+    // fib 함수 - n번째 피보나치 수를 반환
     public static int fib(int n) {
         if (n <= 0) {
             return 0;
@@ -22,9 +27,12 @@ public class Fib {
         return b;
     }
 
-    // 메인 메서드
+    // main 함수 - fib 함수를 호출하여 결과를 출력
     public static void main(String[] args) {
-        int result = fib(10);  // 10번째 피보나치 수를 구함
-        System.out.println(result);  // 결과 출력
+        // fib(10) 호출
+        int result = fib(10);
+
+        // 결과를 출력
+        System.out.println(result);
     }
 }

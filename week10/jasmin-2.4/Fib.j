@@ -77,7 +77,7 @@ One:
 
     ; fib(10) 호출
     bipush 10
-    invokestatic examples/Fib/fib(I)I
+    invokestatic Fib/fib(I)I
     istore_2
 
     ; 결과를 문자열로 변환하여 출력
