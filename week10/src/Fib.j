@@ -1,11 +1,7 @@
-; --- 피보나치 수를 구하는 프로그램 (JVM Assembly) ---
-; File: Fib.j
-; Purpose: n번째 피보나치 수를 구하여 출력
-
-.class public examples/Fib
+.class public Fib
 .super java/lang/Object
 
-; 표준 초기화 메서드
+; 기본 생성자
 .method public <init>()V
    aload_0
    invokenonvirtual java/lang/Object/<init>()V
