@@ -41,7 +41,7 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
         int varIndex = symbolTable.addVariable(varName);
 
         // 초기화 값 로드
-        loadValue(expr);
+        loadValue(value);
 
         // 값을 현재 변수에 저장
         jasmin.addLine("istore_" + varIndex);
