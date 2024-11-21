@@ -28,7 +28,7 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
         jasmin.addLine(".end method");
     }
 
-    // 지역 변수 선언을 처리
+    // 지역 변수 선언 처리
     // 변수의 초기화 값에 따라 적절한 Bytecode를 생성하고, 변수의 인덱스를 심볼 테이블에 등록
     @Override
     public void exitLocal_decl(tinyR3Parser.Local_declContext ctx) {
@@ -40,25 +40,30 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
         // 심볼 테이블에 변수 이름을 추가하고 로컬 변수 인덱스를 얻음
         int varIndex = symbolTable.addVariable(varName);
 
-        // 초기화 값이 정수 리터럴인 경우
-        if (isInteger(value)) {
-            int intValue = Integer.parseInt(value);
-            // 상수 로딩: 값의 크기에 따라 적절한 명령어 선택
-            if (intValue >= -1 && intValue <= 5) {
-                jasmin.addLine("iconst_" + intValue); // 예: iconst_5
-            } else if (intValue >= -128 && intValue <= 127) {
-                jasmin.addLine("bipush " + intValue); // 예: bipush 100
-            } else if (intValue >= -32768 && intValue <= 32767) {
-                jasmin.addLine("sipush " + intValue); // 예: sipush 1000
-            } else {
-                jasmin.addLine("ldc " + intValue);    // 예: ldc 100000
-            }
-            // 값을 로컬 변수에 저장
-            jasmin.addLine("istore_" + varIndex);
-        } else {
-            // 초기화 값이 다른 변수인 경우
-            // 해당 변수의 값을 로드
-            jasmin.addLine("iload_" + symbolTable.getVariableIndex(value));
+        // 초기화 값 로드
+        loadValue(expr);
+
+        // 값을 현재 변수에 저장
+        jasmin.addLine("istore_" + varIndex);
+    }
+
+    // 표현식 문장 처리
+    // 현재는 변수 할당(=)과 같은 단순 표현식만 처리
+    @Override
+    public void exitExpr(tinyR3Parser.ExprContext ctx) {
+        // 표현식이 할당문인 경우 (예: a = 5)
+        if (ctx.getChildCount() == 3 && ctx.getChild(1).getText().equals("=")) {
+            // 왼쪽 피연산자: 변수 이름
+            String varName = ctx.id().getText();
+            // 오른쪽 피연산자: 표현식 (리터럴 또는 변수)
+            String expr = ctx.expr().getText();
+
+            // 변수의 로컬 인덱스 가져오기
+            int varIndex = symbolTable.getVariableIndex(varName);
+
+            // 표현식 값 로드
+            loadValue(expr);
+
             // 값을 현재 변수에 저장
             jasmin.addLine("istore_" + varIndex);
         }
@@ -71,6 +76,30 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
             return true;
         } catch (NumberFormatException e) {
             return false;
+        }
+    }
+
+    // 리터럴 또는 변수 값을 로드하는 메서드
+    private void loadValue(String value) {
+        // 초기화 값이 정수 리터럴인 경우
+        if (isInteger(value)) {
+            loadInteger(Integer.parseInt(value));
+        } else {
+            // 값이 변수인 경우 변수 로드
+            jasmin.addLine("iload_" + symbolTable.getVariableIndex(value));
+        }
+    }
+
+    // 정수 값을 로드하는 메서드
+    private void loadInteger(int intValue) {
+        if (intValue >= -1 && intValue <= 5) {
+            jasmin.addLine("iconst_" + intValue); // 예: iconst_5
+        } else if (intValue >= -128 && intValue <= 127) {
+            jasmin.addLine("bipush " + intValue); // 예: bipush 100
+        } else if (intValue >= -32768 && intValue <= 32767) {
+            jasmin.addLine("sipush " + intValue); // 예: sipush 1000
+        } else {
+            jasmin.addLine("ldc " + intValue);    // 예: ldc 100000
         }
     }
 }
