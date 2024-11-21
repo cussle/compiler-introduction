@@ -136,6 +136,22 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
         }
     }
 
+    // `println!` 구을 처리
+    @Override
+    public void exitPrint_stmt(tinyR3Parser.Print_stmtContext ctx) {
+        // System.out.println을 호출하기 위한 Bytecode 명령어 추가
+        jasmin.addLine("getstatic java/lang/System/out Ljava/io/PrintStream;");
+
+        // 출력할 변수의 이름 추출
+        String varName = ctx.id().getText();
+
+        // 해당 변수의 값을 로드
+        jasmin.addLine("iload_" + symbolTable.getVariableIndex(varName));
+
+        // PrintStream의 println 메서드 호출
+        jasmin.addLine("invokevirtual java/io/PrintStream/println(I)V");
+    }
+
     // 문자열이 정수 리터럴인지 확인하는 메서드
     private boolean isInteger(String s) {
         try {
