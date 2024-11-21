@@ -101,6 +101,41 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
         }
     }
 
+    // 곱셈, 나눗셈, 나머지 연산 처리
+    @Override
+    public void exitMultiplicative_expr(tinyR3Parser.Multiplicative_exprContext ctx) {
+        // 이항 연산인 경우 (예: a * b)
+        if (ctx.getChildCount() == 3) {
+            // 왼쪽 피연산자: 곱셈 표현식 (재귀적으로 처리)
+            String left = ctx.multiplicative_expr().getText();
+            // 연산자: *, /, 또는 %
+            String op = ctx.op.getText();
+            // 오른쪽 피연산자: 단항 표현식
+            String right = ctx.unary_expr().getText();
+
+            // 왼쪽 피연산자 처리
+            loadValue(left);
+
+            // 오른쪽 피연산자가 정수 리터럴인지 확인
+            loadValue(right);
+
+            // 연산자에 따라 적절한 Bytecode 명령어 추가
+            switch (op) {
+                case "*":
+                    jasmin.addLine("imul"); // 곱셈
+                    break;
+                case "/":
+                    jasmin.addLine("idiv"); // 나눗셈
+                    break;
+                case "%":
+                    jasmin.addLine("irem"); // 나머지
+                    break;
+                default:
+                    throw new UnsupportedOperationException("지원되지 않는 연산자: " + op);
+            }
+        }
+    }
+
     // 문자열이 정수 리터럴인지 확인하는 메서드
     private boolean isInteger(String s) {
         try {
