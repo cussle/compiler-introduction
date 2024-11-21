@@ -69,6 +69,38 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
         }
     }
 
+    // 덧셈 및 뺄셈 연산 처리
+    @Override
+    public void exitAdditive_expr(tinyR3Parser.Additive_exprContext ctx) {
+        // 이항 연산인 경우 (예: a + b)
+        if (ctx.getChildCount() == 3) {
+            // 왼쪽 피연산자: 덧셈 표현식 (재귀적으로 처리)
+            String left = ctx.additive_expr().getText();
+            // 연산자: + 또는 -
+            String op = ctx.op.getText();
+            // 오른쪽 피연산자: 곱셈 표현식
+            String right = ctx.multiplicative_expr().getText();
+
+            // 왼쪽 피연산자 처리
+            loadValue(left);
+
+            // 오른쪽 피연산자 처리
+            loadValue(right);
+
+            // 연산자에 따라 적절한 Bytecode 명령어 추가
+            switch (op) {
+                case "+":
+                    jasmin.addLine("iadd"); // 덧셈
+                    break;
+                case "-":
+                    jasmin.addLine("isub"); // 뺄셈
+                    break;
+                default:
+                    throw new UnsupportedOperationException("지원되지 않는 연산자: " + op);
+            }
+        }
+    }
+
     // 문자열이 정수 리터럴인지 확인하는 메서드
     private boolean isInteger(String s) {
         try {
