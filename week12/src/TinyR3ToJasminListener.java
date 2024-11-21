@@ -7,6 +7,24 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
     private SymbolTable symbolTable = new SymbolTable();  // 변수 이름과 로컬 변수 인덱스를 매핑
     private ParseTreeProperty<Integer> exprStack = new ParseTreeProperty<>();  // 각 표현식 노드에서의 스택 사용량을 저장
 
+    // 프로그램의 시작 부분에 클래스 정의 및 초기화 메서드 추가
+    @Override
+    public void enterProgram(tinyR3Parser.ProgramContext ctx) {
+        // 클래스 정의 시작
+        jasmin.addLine(".class public Test");
+        jasmin.addLine(".super java/lang/Object");
+        jasmin.addLine("");
+
+        // 기본 생성자 정의
+        jasmin.addLine("; standard initializer");
+        jasmin.addLine(".method public <init>()V");
+        jasmin.addLine("    aload_0");
+        jasmin.addLine("    invokenonvirtual java/lang/Object/<init>()V");
+        jasmin.addLine("    return");
+        jasmin.addLine(".end method");
+        jasmin.addLine("");
+    }
+
     // 메인 함수 선언에 진입할 때 호출
     @Override
     public void enterMain_decl(tinyR3Parser.Main_declContext ctx) {
