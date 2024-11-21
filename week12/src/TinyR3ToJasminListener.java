@@ -159,6 +159,11 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
         jasmin.addLine("return");
     }
 
+    // Listener가 생성한 Jasmin 코드를 반환하는 메서드
+    public String getJasminCode() {
+        return jasmin.getCode();
+    }
+
     // 문자열이 정수 리터럴인지 확인하는 메서드
     private boolean isInteger(String s) {
         try {
