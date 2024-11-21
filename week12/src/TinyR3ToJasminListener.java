@@ -136,7 +136,7 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
         }
     }
 
-    // `println!` 구을 처리
+    // `println!` 구문 처리
     @Override
     public void exitPrint_stmt(tinyR3Parser.Print_stmtContext ctx) {
         // System.out.println을 호출하기 위한 Bytecode 명령어 추가
@@ -150,6 +150,13 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
 
         // PrintStream의 println 메서드 호출
         jasmin.addLine("invokevirtual java/io/PrintStream/println(I)V");
+    }
+
+    // `return` 구문 처리
+    @Override
+    public void exitReturn_stmt(tinyR3Parser.Return_stmtContext ctx) {
+        // return 명령어 추가
+        jasmin.addLine("return");
     }
 
     // 문자열이 정수 리터럴인지 확인하는 메서드
