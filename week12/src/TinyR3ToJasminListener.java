@@ -3,9 +3,10 @@ import generated.tinyR3Parser;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
 public class TinyR3ToJasminListener extends tinyR3BaseListener {
-    private JasminCodeGenerator jasmin = new JasminCodeGenerator();  // Jasmin 코드를 저장할 객체
-    private SymbolTable symbolTable = new SymbolTable();  // 변수 이름과 로컬 변수 인덱스를 매핑
-    private ParseTreeProperty<Integer> exprStack = new ParseTreeProperty<>();  // 각 표현식 노드에서의 스택 사용량을 저장
+
+    private final JasminCodeGenerator jasmin = new JasminCodeGenerator();  // Jasmin 코드를 저장할 객체
+    private final SymbolTable symbolTable = new SymbolTable();  // 변수 이름과 로컬 변수 인덱스를 매핑
+    private final ParseTreeProperty<String> r3Tree = new ParseTreeProperty<>();  // 각 표현식 노드에서의 스택 사용량을 저장
 
     // 프로그램의 시작 부분에 클래스 정의 및 초기화 메서드 추가
     @Override
@@ -13,14 +14,13 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
         // 클래스 정의 시작
         jasmin.addLine(".class public Test");
         jasmin.addLine(".super java/lang/Object");
-        jasmin.addLine("");
 
         // 기본 생성자 정의
         jasmin.addLine("; standard initializer");
         jasmin.addLine(".method public <init>()V");
-        jasmin.addLine("    aload_0");
-        jasmin.addLine("    invokenonvirtual java/lang/Object/<init>()V");
-        jasmin.addLine("    return");
+        jasmin.addLine("aload_0");
+        jasmin.addLine("invokenonvirtual java/lang/Object/<init>()V");
+        jasmin.addLine("return");
         jasmin.addLine(".end method");
         jasmin.addLine("");
     }
@@ -39,9 +39,6 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
     // 메인 함수 선언에서 나올 때 호출
     @Override
     public void exitMain_decl(tinyR3Parser.Main_declContext ctx) {
-        // 메인 메서드 종료 전에 return 명령어 추가
-        jasmin.addLine("return");
-
         // 메서드 종료
         jasmin.addLine(".end method");
     }
@@ -80,7 +77,12 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
             int varIndex = symbolTable.getVariableIndex(varName);
 
             // 표현식 값 로드
-            loadValue(expr);
+            if (r3Tree.get(ctx.expr()) == null
+                && r3Tree.get(ctx.expr().additive_expr()) == null
+                && r3Tree.get(ctx.expr().additive_expr().multiplicative_expr()) == null
+            ) {
+                loadValue(expr);
+            }
 
             // 값을 현재 변수에 저장
             jasmin.addLine("istore_" + varIndex);
@@ -92,7 +94,7 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
     public void exitAdditive_expr(tinyR3Parser.Additive_exprContext ctx) {
         // 이항 연산인 경우 (예: a + b)
         if (ctx.getChildCount() == 3) {
-            // 왼쪽 피연산자: 덧셈 표현식 (재귀적으로 처리)
+            // 왼쪽 피연산자: 덧셈 표현식
             String left = ctx.additive_expr().getText();
             // 연산자: + 또는 -
             String op = ctx.op.getText();
@@ -100,10 +102,14 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
             String right = ctx.multiplicative_expr().getText();
 
             // 왼쪽 피연산자 처리
-            loadValue(left);
+            if (r3Tree.get(ctx.additive_expr()) == null) {
+                loadValue(left);
+            }
 
             // 오른쪽 피연산자 처리
-            loadValue(right);
+            if (r3Tree.get(ctx.multiplicative_expr()) == null) {
+                loadValue(right);
+            }
 
             // 연산자에 따라 적절한 Bytecode 명령어 추가
             switch (op) {
@@ -116,6 +122,8 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
                 default:
                     throw new UnsupportedOperationException("지원되지 않는 연산자: " + op);
             }
+
+            r3Tree.put(ctx, ctx.getText());
         }
     }
 
@@ -124,18 +132,22 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
     public void exitMultiplicative_expr(tinyR3Parser.Multiplicative_exprContext ctx) {
         // 이항 연산인 경우 (예: a * b)
         if (ctx.getChildCount() == 3) {
-            // 왼쪽 피연산자: 곱셈 표현식 (재귀적으로 처리)
+            // 왼쪽 피연산자: 곱셈 표현식
             String left = ctx.multiplicative_expr().getText();
-            // 연산자: *, /, 또는 %
+            // 연산자: * or / or %
             String op = ctx.op.getText();
             // 오른쪽 피연산자: 단항 표현식
             String right = ctx.unary_expr().getText();
 
             // 왼쪽 피연산자 처리
-            loadValue(left);
+            if (r3Tree.get(ctx.multiplicative_expr()) == null) {
+                loadValue(left);
+            }
 
             // 오른쪽 피연산자가 정수 리터럴인지 확인
-            loadValue(right);
+            if (r3Tree.get(ctx.unary_expr()) == null) {
+                loadValue(right);
+            }
 
             // 연산자에 따라 적절한 Bytecode 명령어 추가
             switch (op) {
@@ -151,6 +163,8 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
                 default:
                     throw new UnsupportedOperationException("지원되지 않는 연산자: " + op);
             }
+
+            r3Tree.put(ctx, ctx.getText());
         }
     }
 
@@ -179,7 +193,7 @@ public class TinyR3ToJasminListener extends tinyR3BaseListener {
 
     // Listener가 생성한 Jasmin 코드를 반환하는 메서드
     public String getJasminCode() {
-        return jasmin.getCode();
+        return jasmin.getCodeList();
     }
 
     // 문자열이 정수 리터럴인지 확인하는 메서드

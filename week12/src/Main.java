@@ -34,10 +34,10 @@ public class Main {
         String jasminCode = listener.getJasminCode();
 
         // Jasmin 코드 파일로 저장
-        FileWriter writer = new FileWriter(outputFile);
+        FileWriter writer = new FileWriter("./src/" + outputFile);
         writer.write(jasminCode);
         writer.close();
 
-        System.out.println(jasminCode);
+//        System.out.println(jasminCode);
     }
 }

@@ -2,17 +2,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JasminCodeGenerator {
-    private List<String> code = new ArrayList<>();
+
+    private final List<String> codeList = new ArrayList<>();
 
     // 코드 라인을 추가
     public void addLine(String line) {
-        code.add(line);
+        System.out.println(line);
+        codeList.add(line);
     }
 
     // 전체 코드를 문자열로 반환
-    public String getCode() {
+    public String getCodeList() {
         StringBuilder sb = new StringBuilder();
-        for (String line : code) {
+        for (String line : codeList) {
             sb.append(line).append("\n");
         }
         return sb.toString();
