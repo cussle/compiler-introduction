@@ -16,11 +16,40 @@ bipush 5
 istore_1
 bipush 0
 istore_2
+bipush 5
+bipush 10
+iadd
+istore_1
 iload_0
-iload_1
+iload_0
 iadd
+istore_0
+getstatic java/lang/System/out Ljava/io/PrintStream;
+iload_0
+invokevirtual java/io/PrintStream.println(I)V
+getstatic java/lang/System/out Ljava/io/PrintStream;
 iload_1
+invokevirtual java/io/PrintStream.println(I)V
+bipush 1
+bipush 2
+bipush 3
+imul
+bipush 4
+imul
+bipush 5
+imul
 iadd
+bipush 6
+iadd
+bipush 7
+bipush 8
+imul
+iadd
+bipush 9
+iadd
+bipush 10
+iadd
+istore_2
 getstatic java/lang/System/out Ljava/io/PrintStream;
 iload_2
 invokevirtual java/io/PrintStream.println(I)V

@@ -7,7 +7,6 @@ invokenonvirtual java/lang/Object/<init>()V
 return
 .end method
 
-
 .method public static main([Ljava/lang/String;)V
 .limit stack 32
 .limit locals 32
@@ -28,4 +27,3 @@ iload_2
 invokevirtual java/io/PrintStream.println(I)V
 return
 .end method
-

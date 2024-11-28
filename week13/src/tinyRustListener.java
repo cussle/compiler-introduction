@@ -242,8 +242,10 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
     @Override
     public void exitAssignment_stmt(tinyRustParser.Assignment_stmtContext ctx) {
-        String expr = rustTree.get(ctx.expr());
-        rustTree.put(ctx, expr);
+        String result = rustTree.get(ctx.expr());
+        // 스켈레톤 코드 오류 수정
+        result += "istore_" + getLocalVarTableIdx(rustTree.get(ctx.id())) + "\n";
+        rustTree.put(ctx, result);
     }
 
     @Override
