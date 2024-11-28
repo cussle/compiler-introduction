@@ -232,7 +232,28 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
     @Override
     public void exitComparative_expr(tinyRustParser.Comparative_exprContext ctx) {
-        rustTree.put(ctx, rustTree.get(ctx.additive_expr()));
+        String result = "";
+        String right = rustTree.get(ctx.additive_expr());
+
+        if (ctx.comparative_expr() != null) {
+            String left = rustTree.get(ctx.comparative_expr());
+            String op = ctx.getChild(1).getText();
+
+            result = left + right;
+
+            result += switch (op) {
+                case "==" -> "if_icmpne ";
+                case "!=" -> "if_icmpeq ";
+                case "<" -> "if_icmpge ";
+                case ">" -> "if_icmple ";
+                case "<=" -> "if_icmpgt ";
+                case ">=" -> "if_icmplt ";
+                default -> throw new IllegalArgumentException("지원되지 않는 연산자: " + op);
+            };
+        } else {
+            result = right;
+        }
+        rustTree.put(ctx, result);
     }
 
     @Override
