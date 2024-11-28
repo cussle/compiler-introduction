@@ -16,6 +16,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     private static FileWriter fw;
     static HashMap<String, Integer> localVarMap;
     static int nextVarIndex = 0;
+    static int labelIndex = 1;
 
     private static void assignLocalVar(String varName) {
         localVarMap.computeIfAbsent(varName, k -> nextVarIndex++);
@@ -158,6 +159,8 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             result = rustTree.get(ctx.return_stmt());
         } else if (ctx.print_stmt() != null) {
             result = rustTree.get(ctx.print_stmt());
+        } else if (ctx.if_stmt() != null) {
+            result = rustTree.get(ctx.if_stmt());
         }
         rustTree.put(ctx, result);
     }
@@ -266,6 +269,38 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         String result = rustTree.get(ctx.expr());
         // 스켈레톤 코드 오류 수정
         result += "istore_" + getLocalVarTableIdx(rustTree.get(ctx.id())) + "\n";
+        rustTree.put(ctx, result);
+    }
+
+    @Override
+    public void exitIf_stmt(tinyRustParser.If_stmtContext ctx) {
+        String result = "";
+
+        // 조건 부분
+        String condition = rustTree.get(ctx.relative_expr());
+        String trueBlock = rustTree.get(ctx.compound_stmt(0));
+
+        result += condition;
+
+        // 조건이 false일 경우
+        String elseLabel = "L" + labelIndex++;
+        result += elseLabel + "\n";
+
+        // true일 경우
+        result += trueBlock;
+
+        // else 문이 존재할 경우
+        if (ctx.ELSE() != null) {
+            String endLabel = "L" + labelIndex++;
+            result += "goto " + endLabel + "\n";
+            result += elseLabel + ":\n";
+
+            String falseBlock = ctx.ELSE() != null ? rustTree.get(ctx.compound_stmt(1)) : "";
+            result += falseBlock + endLabel + ":\n";
+        } else {
+            result += elseLabel + ":\n";
+        }
+
         rustTree.put(ctx, result);
     }
 
