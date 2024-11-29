@@ -289,11 +289,13 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
                 if (isLastLineUnusedLabel) {
                     left = Arrays.stream(left.split("\n"))
                         .takeWhile(line -> !line.trim().startsWith("; unused label:")) // ; unused label: 전까지 유지
-                        .filter(line -> !line.trim().matches("^L\\d+:$") && !line.trim().startsWith("goto")) // 레이블과 goto 제거
+                        .filter(line -> !line.trim().matches("^L\\d+:$") && !line.trim()
+                            .startsWith("goto")) // 레이블과 goto 제거
                         .collect(Collectors.collectingAndThen(Collectors.joining("\n"), temp -> {
                             // 마지막 줄만 처리
                             String[] lines = temp.split("\n");
-                            lines[lines.length - 1] = lines[lines.length - 1].split("\\s+")[0] + " "; // 마지막 줄의 첫 단어만 가져오기
+                            lines[lines.length - 1] =
+                                lines[lines.length - 1].split("\\s+")[0] + " "; // 마지막 줄의 첫 단어만 가져오기
                             return String.join("\n", lines); // 결과를 다시 합치기
                         }));
                 }
