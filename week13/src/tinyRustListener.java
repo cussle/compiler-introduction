@@ -2,9 +2,11 @@ import generated.tinyRustBaseListener;
 import generated.tinyRustParser;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
@@ -32,7 +34,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     @Override
     public void enterProgram(tinyRustParser.ProgramContext ctx) {
         // 파일 출력 (변경 필요)
-        File outputFile = new File("./jasmin-2.4/Test.j");
+        File outputFile = new File("./Test.j");
 
         //변수 테이블
         localVarMap = new HashMap<>();
@@ -55,7 +57,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
                 aload_0
                 invokenonvirtual java/lang/Object/<init>()V
                 return
-                .end method \n
+                .end method\n
                 """);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "오류 발생", e);
@@ -261,7 +263,82 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
     @Override
     public void exitRelative_expr(tinyRustParser.Relative_exprContext ctx) {
-        rustTree.put(ctx, rustTree.get(ctx.comparative_expr()));
+        String result = "";
+        String right = rustTree.get(ctx.comparative_expr());
+
+        if (ctx.relative_expr() != null) {
+            String left = rustTree.get(ctx.relative_expr());
+            String op = ctx.getChild(1).getText();
+
+            // 라벨 생성
+            String endLabel = "L" + labelIndex;
+
+            if (op.equals("&&")) {
+                // 좌측이 false면 전체가 false
+                result += left;
+                result += endLabel + "\n";
+                result += right;
+            } else if (op.equals("||")) {
+                // 중첩된 조건일 경우 코드 수정 필요
+                boolean isLastLineUnusedLabel = Arrays.stream(left.split("\n"))
+                    .reduce((first, second) -> second) // 마지막 줄 추출
+                    .map(String::trim) // 공백 제거
+                    .orElse("") // null 처리
+                    .equals("; unused label:"); // 비교
+
+                if (isLastLineUnusedLabel) {
+                    left = Arrays.stream(left.split("\n"))
+                        .takeWhile(line -> !line.trim().startsWith("; unused label:")) // ; unused label: 전까지 유지
+                        .filter(line -> !line.trim().matches("^L\\d+:$") && !line.trim().startsWith("goto")) // 레이블과 goto 제거
+                        .collect(Collectors.collectingAndThen(Collectors.joining("\n"), temp -> {
+                            // 마지막 줄만 처리
+                            String[] lines = temp.split("\n");
+                            lines[lines.length - 1] = lines[lines.length - 1].split("\\s+")[0] + " "; // 마지막 줄의 첫 단어만 가져오기
+                            return String.join("\n", lines); // 결과를 다시 합치기
+                        }));
+                }
+
+                // 좌측이 true면 전체가 true
+                String[] conditions = Arrays.stream(new String[]{left, right})
+                    .map(content -> Arrays.stream(content.split("\n"))
+                        .map(line -> line.equals("if_icmpeq ") ? "if_icmpne "
+                            : line.equals("if_icmpne ") ? "if_icmpeq "
+                                : line.equals("if_icmpge ") ? "if_icmplt "
+                                    : line.equals("if_icmplt ") ? "if_icmpge "
+                                        : line.equals("if_icmple ") ? "if_icmpgt "
+                                            : line.equals("if_icmpgt ") ? "if_icmple "
+                                                : line) // 조건 반전
+                        .collect(Collectors.collectingAndThen(
+                            Collectors.toList(),
+                            lines -> {
+                                // 마지막 줄 변환
+                                int lastIndex = lines.size() - 1;
+                                lines.set(lastIndex, lines.get(lastIndex));
+                                return String.join("\n", lines);
+                            }
+                        ))
+                    )
+                    .toArray(String[]::new); // 처리된 left와 right를 배열로 변환
+
+                left = isLastLineUnusedLabel ? left : conditions[0];
+                right = conditions[1];
+
+                result += left;
+                result += endLabel + "\n";
+                result += right;
+
+                // 이후 Label 처리
+                result += endLabel + "\n";
+                result += "goto L" + (labelIndex + 1) + "\n";
+                result += endLabel + ":\n; unused label: ";
+            } else {
+                throw new IllegalArgumentException("지원되지 않는 연산자: " + op);
+            }
+        } else {
+            result = right;
+        }
+
+        rustTree.put(ctx, result);
     }
 
     @Override
@@ -279,6 +356,12 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         // 조건 부분
         String condition = rustTree.get(ctx.relative_expr());
         String trueBlock = rustTree.get(ctx.compound_stmt(0));
+
+        // OR 조건일 경우 label index 처리
+        if (ctx.relative_expr().getChild(1) != null
+            && ctx.relative_expr().getChild(1).getText().equals("||")) {
+            labelIndex++;
+        }
 
         result += condition;
 

@@ -1,23 +1,13 @@
 fn main(){
-  let x = 4;
-  let a = 0;
-  let b = 1;
+    let a = 50;
+    let b = 5;
+    let c = 101;
 
-  if x == 3 {
-      println!("{}", a);
-  } else {
+    if b > 3 || a > 10 || c > 100 || c > 99 || c > 10 || b == 5 || a != 5 || c >= 5 {
       println!("{}", b);
-  }
+    } else {
+      println!("{}", c);
+    }
 
-  if x > 3 {
-      println!("{}", a);
-  } else {
-      println!("{}", b);
-  }
-
-  if x > 7 {
-      println!("{}", b);
-  }
-
-  return;
+    return;
 }
