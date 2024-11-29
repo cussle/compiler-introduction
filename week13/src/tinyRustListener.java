@@ -31,8 +31,8 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
     @Override
     public void enterProgram(tinyRustParser.ProgramContext ctx) {
-        // 파일 출력
-        File outputFile = new File("./Test.j");
+        // 파일 출력 (변경 필요)
+        File outputFile = new File("./jasmin-2.4/Test.j");
 
         //변수 테이블
         localVarMap = new HashMap<>();
