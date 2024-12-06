@@ -60,7 +60,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
                 aload_0
                 invokenonvirtual java/lang/Object/<init>()V
                 return
-                .end method\n
+                .end method
                 """);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "enterProgram > > > 오류 발생", e);
@@ -87,8 +87,13 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
     @Override
     public void exitDecl(tinyRustParser.DeclContext ctx) {
-        String main_decl = rustTree.get(ctx.main_decl());
-        rustTree.put(ctx, main_decl);
+        String result = "";
+        if (ctx.fun_decl() != null) {
+            result = rustTree.get(ctx.fun_decl());
+        } else if (ctx.main_decl() != null) {
+            result = rustTree.get(ctx.main_decl());
+        }
+        rustTree.put(ctx, result);
     }
 
     @Override
@@ -99,7 +104,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         String compoundStmt = rustTree.get(ctx.compound_stmt());
 
         // 함수 시그니처 작성
-        String methodSignature = ".method public static " + functionName + "(" + params + ")" + returnType + "\n";
+        String methodSignature = "\n.method public static " + functionName + "(" + params + ")" + returnType + "\n";
 
         // 스택과 로컬 변수의 최대 크기 설정
         String limits = ".limit stack 32\n.limit locals 32\n";
@@ -112,29 +117,21 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     }
 
     @Override
-    public void enterMain_decl(tinyRustParser.Main_declContext ctx) {
-        // Main_decl은 main 함수이므로 main을 위한 자료구조 및 변수 초기화
-        try {
-            // 메인 메서드 선언 시작 및 스택과 로컬 변수의 최대 크기 설정
-            fw.write("""
-                .method public static main([Ljava/lang/String;)V
-                .limit stack 32
-                .limit locals 32
-                """);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "enterMain_decl > > > 오류 발생", e);
-        }
-    }
-
-    @Override
     public void exitMain_decl(tinyRustParser.Main_declContext ctx) {
-        String compound_stmt = rustTree.get(ctx.compound_stmt());
-        rustTree.put(ctx, compound_stmt + "\n" + ".end method\n");
+        String methodSignature = "\n.method public static main([Ljava/lang/String;)V\n";
+        String limits = ".limit stack 32\n.limit locals 32\n";
+        String compoundStmt = rustTree.get(ctx.compound_stmt());
+        String endMethod = ".end method\n";
+
+        String mainMethodCode = methodSignature + limits + compoundStmt + endMethod;
+        rustTree.put(ctx, mainMethodCode);
     }
 
     @Override
     public void exitParam(tinyRustParser.ParamContext ctx) {
         String paramType = rustTree.get(ctx.type_spec());
+        String paramName = rustTree.get(ctx.id());
+        assignLocalVar(paramName);
         rustTree.put(ctx, paramType);
     }
 
