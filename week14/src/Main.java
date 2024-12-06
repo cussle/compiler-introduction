@@ -33,7 +33,7 @@ public class Main {
             ParseTreeWalker walker = new ParseTreeWalker();
             walker.walk(listener, tree);
         } catch (RuntimeException e) {
-            logger.log(Level.SEVERE, "오류 발생", e);
+            logger.log(Level.SEVERE, "Main > > > 오류 발생", e);
         }
     }
 }

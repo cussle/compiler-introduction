@@ -60,7 +60,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
                 .end method\n
                 """);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "오류 발생", e);
+            logger.log(Level.SEVERE, "enterProgram > > > 오류 발생", e);
         }
     }
 
@@ -78,7 +78,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
             fw.close();
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "오류 발생", e);
+            logger.log(Level.SEVERE, "exitProgram > > > 오류 발생", e);
         }
     }
 
@@ -99,7 +99,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
                 .limit locals 32
                 """);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "오류 발생", e);
+            logger.log(Level.SEVERE, "enterMain_decl > > > 오류 발생", e);
         }
     }
 
@@ -163,6 +163,8 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             result = rustTree.get(ctx.print_stmt());
         } else if (ctx.if_stmt() != null) {
             result = rustTree.get(ctx.if_stmt());
+        } else if (ctx.for_stmt() != null) {
+            result = rustTree.get(ctx.for_stmt());
         }
         rustTree.put(ctx, result);
     }
@@ -390,6 +392,62 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     }
 
     @Override
+    public void enterFor_stmt(tinyRustParser.For_stmtContext ctx) {
+        String loopVar = ctx.id().getText(); // 직접 변수 이름 추출
+        System.out.println("==== loopVar(Enter): " + loopVar);
+        assignLocalVar(loopVar); // 반복 변수 정의
+    }
+
+    @Override
+    public void exitFor_stmt(tinyRustParser.For_stmtContext ctx) {
+        String loopVar = rustTree.get(ctx.id()); // 반복문 변수 이름
+        System.out.println("===== loopVar: " + loopVar);
+        String range = rustTree.get(ctx.range()); // 범위 정보
+        System.out.println("===== Range: " + range);
+        String[] parts = range.split("\\.\\.");
+        int start = Integer.parseInt(parts[0]);
+        int end = Integer.parseInt(parts[1]);
+
+        // 초기화 코드
+        String loopVarStore = "bipush " + start + "\n" +
+            "istore_" + getLocalVarTableIdx(loopVar) + "\n";
+
+        // 반복 시작 지점 레이블
+        String loopStartLabel = "L" + labelIndex++;
+        // 반복 종료 지점 레이블
+        String loopEndLabel = "L" + labelIndex++;
+
+        // 조건 검사 및 점프
+        String conditionCheck = "iload_" + getLocalVarTableIdx(loopVar) + "\n" +
+            "bipush " + end + "\n" +
+            "if_icmpge " + loopEndLabel + "\n";
+
+        // 본문 실행 후 반복 변수 증감
+        String body = rustTree.get(ctx.compound_stmt());
+
+        String increment = "iload_" + getLocalVarTableIdx(loopVar) + "\n" +
+            "bipush 1\n" +
+            "iadd\n" +
+            "istore_" + getLocalVarTableIdx(loopVar) + "\n" +
+            "goto " + loopStartLabel + "\n";
+
+        // 루프 종료 레이블
+        String loopEnd = loopEndLabel + ":\n";
+
+        // 전체 루프 코드
+        String forLoopCode = loopStartLabel + ":\n" +
+            conditionCheck +
+            body +
+            increment +
+            loopEnd;
+
+        // 초기화 코드 + 루프 코드
+        String completeForLoop = loopVarStore + forLoopCode;
+
+        rustTree.put(ctx, completeForLoop);
+    }
+
+    @Override
     public void exitPrint_stmt(tinyRustParser.Print_stmtContext ctx) {
         // System.out.println을 호출하기 위한 Bytecode 명령어 추가
         String result = "getstatic java/lang/System/out Ljava/io/PrintStream;\n";
@@ -400,6 +458,22 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         // PrintStream의 println 메서드 호출
         result += "invokevirtual java/io/PrintStream.println(I)V\n";
         rustTree.put(ctx, result);
+    }
+
+    @Override
+    public void exitRange(tinyRustParser.RangeContext ctx) {
+        String start = rustTree.get(ctx.literal(0)); // 시작 값
+        String end = rustTree.get(ctx.literal(1));   // 끝 값
+        boolean inclusive = ctx.getText().contains("..="); // 포함 여부
+        System.out.println("==== inclusive: " + inclusive);
+
+        // 포함일 경우 끝 값을 +1
+        if (inclusive) {
+            end = String.valueOf(Integer.parseInt(end) + 1);
+        }
+
+        // 범위 정보 저장
+        rustTree.put(ctx, start + ".." + end);
     }
 
     @Override
