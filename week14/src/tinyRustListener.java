@@ -113,6 +113,15 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     }
 
     @Override
+    public void exitType_spec(tinyRustParser.Type_specContext ctx) {
+        if (ctx.I32() != null) {
+            rustTree.put(ctx, "I");  // i32 -> I
+        } else {
+            throw new IllegalArgumentException("지원되지 않는 타입: " + ctx.getText());
+        }
+    }
+
+    @Override
     public void exitCompound_stmt(tinyRustParser.Compound_stmtContext ctx) {
         StringBuilder result = new StringBuilder();
         int local_count = ctx.local_decl().size();
