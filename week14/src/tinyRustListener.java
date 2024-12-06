@@ -113,6 +113,12 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     }
 
     @Override
+    public void exitParam(tinyRustParser.ParamContext ctx) {
+        String paramType = rustTree.get(ctx.type_spec());
+        rustTree.put(ctx, paramType);
+    }
+
+    @Override
     public void exitType_spec(tinyRustParser.Type_specContext ctx) {
         if (ctx.I32() != null) {
             rustTree.put(ctx, "I");  // i32 -> I
