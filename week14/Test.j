@@ -14,23 +14,28 @@ bipush 0
 istore_0
 bipush 1
 istore_1
-L1:
+L3:
 iload_1
-bipush 11
-if_icmpge L2
+bipush 10
+if_icmpge L1
+iload_1
+bipush 5
+if_icmpne L2
+goto L1
+L2:
+getstatic java/lang/System/out Ljava/io/PrintStream;
+iload_1
+invokevirtual java/io/PrintStream.println(I)V
 iload_0
 iload_1
 iadd
 istore_0
-getstatic java/lang/System/out Ljava/io/PrintStream;
-iload_0
-invokevirtual java/io/PrintStream.println(I)V
 iload_1
 bipush 1
 iadd
 istore_1
-goto L1
-L2:
+goto L3
+L1:
 getstatic java/lang/System/out Ljava/io/PrintStream;
 iload_0
 invokevirtual java/io/PrintStream.println(I)V
