@@ -3,5 +3,8 @@ fn add(a: i32, b: i32) -> i32 {
 }
 
 fn main() {
+    let a = 0;
+    a = add(5, 3);
+    println!("{}", a);
     return;
 }

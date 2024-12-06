@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -16,30 +18,75 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
     ParseTreeProperty<String> rustTree = new ParseTreeProperty<>();
     private static FileWriter fw;
-    static HashMap<String, Integer> localVarMap;
-    static int nextVarIndex = 0;
-    static int labelIndex = 1;
+    static HashMap<String, Integer> localVarMap;  // 전역 변수 맵 (함수 외부에서 선언된 변수 관리)
+    static int nextVarIndex = 0;  // 로컬 변수 인덱스
+    static int labelIndex = 1;  // 라벨의 인덱스 번호 관리
+    private String currentLoopEndLabel = null;  // 현재 루프의 종료 레이블을 저장하기 위한 변수
 
-    // 현재 루프의 종료 레이블을 저장하기 위한 변수
-    private String currentLoopEndLabel = null;
+    // 스코프 관리를 위한 스택
+    private static final Stack<HashMap<String, Integer>> scopeStack = new Stack<>();  // 현재 활성화된 함수의 변수 맵을 저장 (함수가 호출될 때 새로운 스코프를 push, 종료될 때 pop)
+    private static final Stack<Integer> indexStack = new Stack<>();  // 각 스코프별로 할당된 로컬 변수 인덱스 추적
+
+    // 함수 시그니처를 저장하는 맵 (함수 이름 : 시그니처)
+    private final Map<String, String> functionSignatures = new HashMap<>();  // 함수 이름을 key로 하고, 해당 함수의 시그니처를 value로 가지는 맵
 
     private static void assignLocalVar(String varName) {
-        localVarMap.computeIfAbsent(varName, k -> nextVarIndex++);
+        if (scopeStack.isEmpty()) {
+            // 전역 스코프에 변수 할당
+            localVarMap.computeIfAbsent(varName, k -> nextVarIndex++);
+        } else {
+            // 현재 스코프에 변수 할당
+            HashMap<String, Integer> currentScope = scopeStack.peek();
+            int currentIndex = indexStack.peek();
+            currentScope.computeIfAbsent(varName, k -> {
+                indexStack.pop();
+                indexStack.push(currentIndex + 1);
+                return currentIndex;
+            });
+        }
     }
 
     private static int getLocalVarTableIdx(String varName) {
-        if (!localVarMap.containsKey(varName)) {
-            throw new RuntimeException("=== 정의되지 않은 변수: " + varName);
+        if (scopeStack.isEmpty()) {
+            // 전역 스코프에서 변수 검색
+            if (!localVarMap.containsKey(varName)) {
+                throw new RuntimeException("=== 정의되지 않은 변수: " + varName);
+            }
+            return localVarMap.get(varName);
+        } else {
+            // 현재 스코프에서 변수 검색
+            for (int i = scopeStack.size() - 1; i >= 0; i--) {
+                HashMap<String, Integer> scope = scopeStack.get(i);
+                if (scope.containsKey(varName)) {
+                    return scope.get(varName);
+                }
+            }
+            // 전역 스코프에서 변수 검색
+            if (!localVarMap.containsKey(varName)) {
+                throw new RuntimeException("=== 정의되지 않은 변수: " + varName);
+            }
+            return localVarMap.get(varName);
         }
-        return localVarMap.get(varName);
+    }
+
+    private String getParamsDescriptor(tinyRustParser.ParamsContext ctx) {
+        if (ctx.param().isEmpty()) {
+            return "";
+        } else {
+            StringBuilder descriptor = new StringBuilder();
+            for (tinyRustParser.ParamContext paramCtx : ctx.param()) {
+                descriptor.append(rustTree.get(paramCtx.type_spec()));
+            }
+            return descriptor.toString();
+        }
     }
 
     @Override
     public void enterProgram(tinyRustParser.ProgramContext ctx) {
-        // 파일 출력 (변경 필요)
+        // 파일 출력 설정
         File outputFile = new File("./Test.j");
 
-        //변수 테이블
+        // 전역 스코프 초기화
         localVarMap = new HashMap<>();
 
         try {
@@ -78,7 +125,6 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         try {
             fw.write(program.toString());
             fw.flush();
-
             fw.close();
         } catch (Exception e) {
             logger.log(Level.SEVERE, "exitProgram > > > 오류 발생", e);
@@ -94,6 +140,13 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             result = rustTree.get(ctx.main_decl());
         }
         rustTree.put(ctx, result);
+    }
+
+    @Override
+    public void enterFun_decl(tinyRustParser.Fun_declContext ctx) {
+        // 새로운 함수 스코프 시작
+        scopeStack.push(new HashMap<>());
+        indexStack.push(0);
     }
 
     @Override
@@ -114,6 +167,21 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         String functionCode = methodSignature + limits + compoundStmt + endMethod;
 
         rustTree.put(ctx, functionCode);
+
+        // 함수 시그니처 저장
+        String descriptor = "(" + getParamsDescriptor(ctx.params()) + ")" + returnType;
+        functionSignatures.put(functionName, descriptor);
+
+        // 함수 스코프 종료
+        scopeStack.pop();
+        indexStack.pop();
+    }
+
+    @Override
+    public void enterMain_decl(tinyRustParser.Main_declContext ctx) {
+        // 메인 함수 스코프 시작
+        scopeStack.push(new HashMap<>());
+        indexStack.push(0);
     }
 
     @Override
@@ -125,14 +193,14 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
         String mainMethodCode = methodSignature + limits + compoundStmt + endMethod;
         rustTree.put(ctx, mainMethodCode);
-    }
 
-    @Override
-    public void exitParam(tinyRustParser.ParamContext ctx) {
-        String paramType = rustTree.get(ctx.type_spec());
-        String paramName = rustTree.get(ctx.id());
-        assignLocalVar(paramName);
-        rustTree.put(ctx, paramType);
+        // 메인 함수 시그니처 저장
+        String descriptor = "([Ljava/lang/String;)V";
+        functionSignatures.put("main", descriptor);
+
+        // 메인 함수 스코프 종료
+        scopeStack.pop();
+        indexStack.pop();
     }
 
     @Override
@@ -146,6 +214,14 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             }
             rustTree.put(ctx, params.toString());
         }
+    }
+
+    @Override
+    public void exitParam(tinyRustParser.ParamContext ctx) {
+        String paramType = rustTree.get(ctx.type_spec());
+        String paramName = rustTree.get(ctx.id());
+        assignLocalVar(paramName);
+        rustTree.put(ctx, paramType);
     }
 
     @Override
@@ -182,10 +258,11 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     }
 
     @Override
-    public void exitLocal_decl(tinyRustParser.Local_declContext ctx) {  //변수 할당(Assignment)
+    public void exitLocal_decl(tinyRustParser.Local_declContext ctx) {  // 변수 선언 및 할당
         String result = "";
         String val = rustTree.get(ctx.val());
         String id = rustTree.get(ctx.id());
+
         if (localVarMap.containsKey(id)) {
             result = "istore_" + getLocalVarTableIdx(id);
         } else {
@@ -196,7 +273,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     }
 
     @Override
-    public void exitVal(tinyRustParser.ValContext ctx) {  //변수 할당 우변의, 할당될 값
+    public void exitVal(tinyRustParser.ValContext ctx) {  // 변수 할당 우변의 값
         String result = "";
         if (ctx.literal() != null) {
             result = "bipush " + rustTree.get(ctx.literal());
@@ -289,12 +366,39 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
     @Override
     public void exitFactor(tinyRustParser.FactorContext ctx) {
-        // expr 막바지에 호출, literal, id 터미널 호출하거나 괄호 연산
         String result = "";
-        if (ctx.id() != null) {
-            result = "iload_" + getLocalVarTableIdx(rustTree.get(ctx.id()));
-        } else if (ctx.literal() != null) {
-            result = "bipush " + rustTree.get(ctx.literal());
+        if (ctx.id() != null && ctx.args() != null) { // 함수 호출
+            String funcName = rustTree.get(ctx.id());
+            String argsCode = rustTree.get(ctx.args());
+
+            if (!functionSignatures.containsKey(funcName)) {
+                throw new RuntimeException("=== 정의되지 않은 함수: " + funcName);
+            }
+
+            String descriptor = functionSignatures.get(funcName);
+            String invokestatic = "invokestatic Test/" + funcName + descriptor + "\n";
+
+            result = argsCode + invokestatic;
+        } else if (ctx.id() != null) { // 변수 로드
+            String varName = rustTree.get(ctx.id());
+            result = "iload_" + getLocalVarTableIdx(varName);
+        } else if (ctx.literal() != null) { // 리터럴 로드
+            String literal = rustTree.get(ctx.literal());
+            try {
+                int intValue = Integer.parseInt(literal);
+                if (intValue >= -128 && intValue <= 127) {
+                    result = "bipush " + intValue;
+                } else if (intValue >= -32768 && intValue <= 32767) {
+                    result = "sipush " + intValue;
+                } else {
+                    result = "ldc " + intValue;
+                }
+            } catch (NumberFormatException e) {
+                // non-integer literals
+                result = "ldc " + literal;
+            }
+        } else { // '(' expr ')'
+            result = rustTree.get(ctx.expr());
         }
         rustTree.put(ctx, result + "\n");
     }
@@ -410,7 +514,6 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     @Override
     public void exitAssignment_stmt(tinyRustParser.Assignment_stmtContext ctx) {
         String result = rustTree.get(ctx.expr());
-        // 스켈레톤 코드 오류 수정
         result += "istore_" + getLocalVarTableIdx(rustTree.get(ctx.id())) + "\n";
         rustTree.put(ctx, result);
     }
@@ -456,7 +559,6 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     @Override
     public void enterFor_stmt(tinyRustParser.For_stmtContext ctx) {
         String loopVar = ctx.id().getText(); // 직접 변수 이름 추출
-//        System.out.println("==== loopVar(Enter): " + loopVar);  // 삭제
         assignLocalVar(loopVar); // 반복 변수 정의
 
         // 루프 종료 레이블 생성 및 설정
@@ -466,9 +568,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     @Override
     public void exitFor_stmt(tinyRustParser.For_stmtContext ctx) {
         String loopVar = rustTree.get(ctx.id()); // 반복문 변수 이름
-//        System.out.println("===== loopVar: " + loopVar);  // 삭제
         String range = rustTree.get(ctx.range()); // 범위 정보
-//        System.out.println("===== Range: " + range);
         String[] parts = range.split("\\.\\.");
         int start = Integer.parseInt(parts[0]);
         int end = Integer.parseInt(parts[1]);
@@ -570,7 +670,6 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         String start = rustTree.get(ctx.literal(0)); // 시작 값
         String end = rustTree.get(ctx.literal(1));   // 끝 값
         boolean inclusive = ctx.getText().contains("..="); // 포함 여부
-//        System.out.println("==== inclusive: " + inclusive);  // 삭제
 
         // 포함일 경우 끝 값을 +1
         if (inclusive) {
@@ -606,6 +705,19 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         }
 
         rustTree.put(ctx, result);
+    }
+
+    @Override
+    public void exitArgs(tinyRustParser.ArgsContext ctx) {
+        if (ctx.expr().isEmpty()) {
+            rustTree.put(ctx, "");
+        } else {
+            StringBuilder argsCode = new StringBuilder();
+            for (tinyRustParser.ExprContext exprCtx : ctx.expr()) {
+                argsCode.append(rustTree.get(exprCtx));
+            }
+            rustTree.put(ctx, argsCode.toString());
+        }
     }
 
     @Override

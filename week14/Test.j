@@ -19,5 +19,15 @@ ireturn
 .method public static main([Ljava/lang/String;)V
 .limit stack 32
 .limit locals 32
+bipush 0
+istore_0
+bipush 5
+bipush 3
+invokestatic Test/add(II)I
+
+istore_0
+getstatic java/lang/System/out Ljava/io/PrintStream;
+iload_0
+invokevirtual java/io/PrintStream.println(I)V
 return
 .end method
