@@ -54,7 +54,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             }
             return localVarMap.get(varName);
         } else {
-            // 현재 스코프에서 변수 검색
+            // 현재 스코프부터 검색
             for (int i = scopeStack.size() - 1; i >= 0; i--) {
                 HashMap<String, Integer> scope = scopeStack.get(i);
                 if (scope.containsKey(varName)) {
@@ -263,11 +263,20 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         String val = rustTree.get(ctx.val());
         String id = rustTree.get(ctx.id());
 
-        if (localVarMap.containsKey(id)) {
+        // 현재 스코프에서 변수 선언 여부 확인
+        boolean isDeclared = false;
+        for (int i = scopeStack.size() - 1; i >= 0; i--) {
+            if (scopeStack.get(i).containsKey(id)) {
+                isDeclared = true;
+                break;
+            }
+        }
+
+        if (isDeclared) {
             result = "istore_" + getLocalVarTableIdx(id);
         } else {
-            result = "istore_" + nextVarIndex;
             assignLocalVar(id);
+            result = "istore_" + getLocalVarTableIdx(id);
         }
         rustTree.put(ctx, val + result + "\n");
     }
@@ -376,7 +385,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             }
 
             String descriptor = functionSignatures.get(funcName);
-            String invokestatic = "invokestatic Test/" + funcName + descriptor + "\n";
+            String invokestatic = "invokestatic Test/" + funcName + descriptor;
 
             result = argsCode + invokestatic;
         } else if (ctx.id() != null) { // 변수 로드
