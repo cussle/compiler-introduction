@@ -586,7 +586,14 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
     @Override
     public void exitReturn_stmt(tinyRustParser.Return_stmtContext ctx) {
-        rustTree.put(ctx, "return");
+        String result = "";
+        if (ctx.expr() != null) {  // 반환값이 있는 경우
+            result += rustTree.get(ctx.expr());
+            result += "ireturn\n";
+        } else {  // 반환값이 없는 경우
+            result += "return\n";
+        }
+        rustTree.put(ctx, result);
     }
 
     @Override
