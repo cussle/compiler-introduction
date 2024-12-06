@@ -92,6 +92,26 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     }
 
     @Override
+    public void exitFun_decl(tinyRustParser.Fun_declContext ctx) {
+        String functionName = rustTree.get(ctx.id());
+        String params = rustTree.get(ctx.params());
+        String returnType = rustTree.get(ctx.ret_type_spec());
+        String compoundStmt = rustTree.get(ctx.compound_stmt());
+
+        // 함수 시그니처 작성
+        String methodSignature = ".method public static " + functionName + "(" + params + ")" + returnType + "\n";
+
+        // 스택과 로컬 변수의 최대 크기 설정
+        String limits = ".limit stack 32\n.limit locals 32\n";
+        String endMethod = ".end method\n";
+
+        // 전체 함수 코드
+        String functionCode = methodSignature + limits + compoundStmt + endMethod;
+
+        rustTree.put(ctx, functionCode);
+    }
+
+    @Override
     public void enterMain_decl(tinyRustParser.Main_declContext ctx) {
         // Main_decl은 main 함수이므로 main을 위한 자료구조 및 변수 초기화
         try {
