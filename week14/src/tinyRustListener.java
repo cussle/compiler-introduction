@@ -463,6 +463,41 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     }
 
     @Override
+    public void enterLoop_stmt(tinyRustParser.Loop_stmtContext ctx) {
+        // 루프 종료 레이블 생성 및 설정
+        currentLoopEndLabel = "L" + labelIndex++;
+    }
+
+    @Override
+    public void exitLoop_stmt(tinyRustParser.Loop_stmtContext ctx) {
+        // 루프 종료 레이블 설정
+        String loopEndLabel = currentLoopEndLabel;
+
+        // 루프 시작 레이블 생성
+        String loopStartLabel = "L" + labelIndex++;
+
+        // 루프 본문 코드
+        String body = rustTree.get(ctx.compound_stmt());
+
+        // 루프 증감 및 시작으로 점프
+        String increment = "goto " + loopStartLabel + "\n";
+
+        // 루프 종료 레이블 정의
+        String loopEnd = loopEndLabel + ":\n";
+
+        // 전체 루프 코드 조립
+        String loopCode = loopStartLabel + ":\n" +
+            body +
+            increment +
+            loopEnd;
+
+        rustTree.put(ctx, loopCode);
+
+        // 루프 종료 후 루프 종료 레이블 복원
+        currentLoopEndLabel = null;
+    }
+
+    @Override
     public void exitPrint_stmt(tinyRustParser.Print_stmtContext ctx) {
         // System.out.println을 호출하기 위한 Bytecode 명령어 추가
         String result = "getstatic java/lang/System/out Ljava/io/PrintStream;\n";

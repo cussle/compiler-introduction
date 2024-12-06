@@ -1,12 +1,14 @@
 fn main() {
   let mut a = 0;
-  for i in 1..10 {
-    if i == 5 {
+
+  loop {
+    if a > 10 {
       break;
     }
-    println!("{}", i);
-    a = a + i;
+
+    println!("{}", a);
+    a = a + 1;
   }
-  println!("{}", a);
+
   return;
 }
