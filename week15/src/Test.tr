@@ -1,11 +1,12 @@
 fn main() {
-    let mut number = 7;
+    let mut number = 96;
+    println!("{}", number);
 
     match number {
-      10..=20 => number = number + 2,
-      _ => number = number + 3,
+      1 => number = number + 9,
+      10..=20 => number = number + 3,
+      2 | 3 | 5 | 7 => number = number + 2,
     }
-
     println!("{}", number);
     return;
 }

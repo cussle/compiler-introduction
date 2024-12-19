@@ -775,14 +775,6 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
                 result.append("iload_").append(getLocalVarTableIdx(id)).append("\n");
                 result.append("if_icmpeq L").append(labelIndex).append("\n");
             }
-        } else if (ctx.literal() != null) {  // 리터럴 매칭 (ex. 2 | 3 | 4 혹은 단일)
-            int matchLabelIndex = labelIndex;
-            for (tinyRustParser.LiteralContext litCtx : ctx.literal()) {
-                String lit = rustTree.get(litCtx);
-                result.append("iload_").append(matchTargetIndex).append("\n");
-                result.append("bipush ").append(lit).append("\n");
-                result.append("if_icmpeq L").append(matchLabelIndex).append("\n");
-            }
         } else if (ctx.range() != null) {  // 범위 매칭 (ex. 10..=20)
             String range = rustTree.get(ctx.range());
             String[] parts = range.split("\\.\\.");
@@ -793,13 +785,21 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             result.append("iload_").append(matchTargetIndex).append("\n");
             result.append("bipush ").append(start).append("\n");
             String falseLabel = "L" + labelIndex++;
-            result.append("if_icmplt L").append(falseLabel);  // 거짓일 경우, 다음 조건으로 점프
+            result.append("if_icmplt ").append(falseLabel).append("\n");  // 거짓일 경우, 다음 조건으로 점프
 
             // 변수 < end 확인
             result.append("iload_").append(matchTargetIndex).append("\n");
             result.append("bipush ").append(end).append("\n");
             result.append("if_icmplt L").append(labelIndex).append("\n");  // 참일 경우, 해당 매칭 구문으로 점프
             result.append(falseLabel).append(":\n");
+        } else if (ctx.literal() != null) {  // 리터럴 매칭 (ex. 2 | 3 | 4 혹은 단일)
+            int matchLabelIndex = labelIndex;
+            for (tinyRustParser.LiteralContext litCtx : ctx.literal()) {
+                String lit = rustTree.get(litCtx);
+                result.append("iload_").append(matchTargetIndex).append("\n");
+                result.append("bipush ").append(lit).append("\n");
+                result.append("if_icmpeq L").append(matchLabelIndex).append("\n");
+            }
         }
 
         rustTree.put(ctx, result.toString());
