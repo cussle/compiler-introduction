@@ -736,11 +736,24 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
         // 준비된 케이스 처리
         int numCases = ctx.match_expr().size();
+
+        // 와일드카드 존재 여부 확인
+        Boolean containWildCard = false;
+
         String endLabel = "L" + labelIndex++;
         for (int i = 0; i < numCases; i++) {
             tinyRustParser.Match_exprContext matchExprCtx = ctx.match_expr(i);
             conditions.append(rustTree.get(matchExprCtx.match_conditional_expr()));
             bodys.append(rustTree.get(matchExprCtx.match_body()).replace("${END}", endLabel));
+
+            if (matchExprCtx.match_conditional_expr().id() != null &&
+                matchExprCtx.match_conditional_expr().id().getText().equals("_")) {
+                containWildCard = true;
+            }
+        }
+
+        if (!containWildCard) {
+            conditions.append("goto ").append(endLabel).append("\n");
         }
 
         result.append(conditions).append(bodys).append(endLabel).append(":\n");
@@ -756,14 +769,14 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             String id = rustTree.get(ctx.id());
 
             if (ctx.id().getText().equals("_")) {  // 와일드 카드일 경우 별도로 처리
-                result.append("goto L").append(labelIndex++).append("\n");
+                result.append("goto L").append(labelIndex).append("\n");
             } else {  // 일반 식별자
                 result.append("iload_").append(matchTargetIndex).append("\n");
                 result.append("iload_").append(getLocalVarTableIdx(id)).append("\n");
-                result.append("if_icmpeq L").append(labelIndex++).append("\n");
+                result.append("if_icmpeq L").append(labelIndex).append("\n");
             }
         } else if (ctx.literal() != null) {  // 리터럴 매칭 (ex. 2 | 3 | 4 혹은 단일)
-            int matchLabelIndex = labelIndex++;
+            int matchLabelIndex = labelIndex;
             for (tinyRustParser.LiteralContext litCtx : ctx.literal()) {
                 String lit = rustTree.get(litCtx);
                 result.append("iload_").append(matchTargetIndex).append("\n");
@@ -785,7 +798,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             // 변수 < end 확인
             result.append("iload_").append(matchTargetIndex).append("\n");
             result.append("bipush ").append(end).append("\n");
-            result.append("if_icmplt L").append(labelIndex++).append("\n");  // 참일 경우, 해당 매칭 구문으로 점프
+            result.append("if_icmplt L").append(labelIndex).append("\n");  // 참일 경우, 해당 매칭 구문으로 점프
             result.append(falseLabel).append(":\n");
         }
 
@@ -796,7 +809,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     public void exitMatch_body(tinyRustParser.Match_bodyContext ctx) {
         StringBuilder result = new StringBuilder();
 
-        result.append("L").append(labelIndex).append(":\n");
+        result.append("L").append(labelIndex++).append(":\n");
         if (ctx.id() != null) {  // 변수에 값 할당
             String varName = rustTree.get(ctx.id());
             String exprCode = rustTree.get(ctx.expr());
@@ -805,7 +818,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         } else if (ctx.expr() != null) {  // 단순 표현식 실행 후 변수에 저장
             result.append(rustTree.get(ctx.expr()));
         }
-        result.append("goto ${END}");
+        result.append("goto ${END}\n");
 
         rustTree.put(ctx, result.toString());
     }
