@@ -2,10 +2,8 @@ import generated.tinyRustBaseListener;
 import generated.tinyRustParser;
 import java.io.File;
 import java.io.FileWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.logging.Level;
@@ -31,6 +29,9 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
 
     // 함수 시그니처를 저장하는 맵 (함수 이름 : 시그니처)
     private final Map<String, String> functionSignatures = new HashMap<>();  // 함수 이름을 key로 하고, 해당 함수의 시그니처를 value로 가지는 맵
+
+    // 매칭할 변수의 인덱스 관리
+    static int matchTargetIndex = -1;
 
     private static void assignLocalVar(String varName) {
         if (scopeStack.isEmpty()) {
@@ -719,9 +720,57 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     }
 
     @Override
+    public void enterMatch_stmt(tinyRustParser.Match_stmtContext ctx) {
+        // 매칭할 변수의 인덱스 저장
+        String matchVar = rustTree.get(ctx.id());
+        matchTargetIndex = getLocalVarTableIdx(matchVar);
+    }
+
+    @Override
+    public void exitMatch_conditional_expr(tinyRustParser.Match_conditional_exprContext ctx) {
+        StringBuilder result = new StringBuilder();
+
+        if (ctx.id() != null) {  // 식별자 매칭
+            String id = rustTree.get(ctx.id());
+            result.append("iload_").append(matchTargetIndex).append("\n");
+            result.append("iload_").append(getLocalVarTableIdx(id)).append("\n");
+            result.append("if_icmpeq L").append(labelIndex++).append("\n");
+        } else if (ctx.literal() != null) {  // 리터럴 매칭 (ex. 2 | 3 | 4 혹은 단일)
+            int matchLabelIndex = labelIndex++;
+            for (tinyRustParser.LiteralContext litCtx : ctx.literal()) {
+                String lit = rustTree.get(litCtx);
+                result.append("iload_").append(matchTargetIndex).append("\n");
+                result.append("bipush ").append(lit).append("\n");
+                result.append("if_icmpeq L").append(matchLabelIndex).append("\n");
+            }
+        } else if (ctx.range() != null) {  // 범위 매칭 (ex. 10..=20)
+            String range = rustTree.get(ctx.range());
+            String[] parts = range.split("\\.\\.");
+            int start = Integer.parseInt(parts[0]);
+            int end = Integer.parseInt(parts[1]);
+
+            // 변수 < start
+            result.append("iload_").append(matchTargetIndex).append("\n");
+            result.append("bipush ").append(start).append("\n");
+            result.append("if_icmplt ${DEFAULT}");
+
+            // 변수 > end
+            result.append("iload_").append(matchTargetIndex).append("\n");
+            result.append("bipush ").append(end).append("\n");
+            result.append("if_icmpge ${DEFAULT}");
+
+            // 범위 내일 경우
+            result.append("goto L").append(labelIndex++).append("\n");
+        }
+
+        rustTree.put(ctx, result.toString());
+    }
+
+    @Override
     public void exitMatch_body(tinyRustParser.Match_bodyContext ctx) {
         StringBuilder result = new StringBuilder();
 
+        result.append("L").append(labelIndex).append(":\n");
         if (ctx.id() != null) {  // 변수에 값 할당
             String varName = rustTree.get(ctx.id());
             String exprCode = rustTree.get(ctx.expr());
@@ -730,6 +779,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         } else if (ctx.expr() != null) {  // 단순 표현식 실행 후 변수에 저장
             result.append(rustTree.get(ctx.expr()));
         }
+        result.append("goto ${END}");
 
         rustTree.put(ctx, result.toString());
     }
