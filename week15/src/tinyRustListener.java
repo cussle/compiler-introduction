@@ -15,23 +15,19 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 public class tinyRustListener extends tinyRustBaseListener implements ParseTreeListener {
 
     private static final Logger logger = Logger.getLogger(Main.class.getName());
-
-    ParseTreeProperty<String> rustTree = new ParseTreeProperty<>();
-    private static FileWriter fw;
-    static HashMap<String, Integer> localVarMap;  // 전역 변수 맵 (함수 외부에서 선언된 변수 관리)
-    static int nextVarIndex = 0;  // 로컬 변수 인덱스
-    static int labelIndex = 1;  // 라벨의 인덱스 번호 관리
-    private String currentLoopEndLabel = null;  // 현재 루프의 종료 레이블을 저장하기 위한 변수
-
     // 스코프 관리를 위한 스택
     private static final Stack<HashMap<String, Integer>> scopeStack = new Stack<>();  // 현재 활성화된 함수의 변수 맵을 저장 (함수가 호출될 때 새로운 스코프를 push, 종료될 때 pop)
     private static final Stack<Integer> indexStack = new Stack<>();  // 각 스코프별로 할당된 로컬 변수 인덱스 추적
-
-    // 함수 시그니처를 저장하는 맵 (함수 이름 : 시그니처)
-    private final Map<String, String> functionSignatures = new HashMap<>();  // 함수 이름을 key로 하고, 해당 함수의 시그니처를 value로 가지는 맵
-
+    static HashMap<String, Integer> localVarMap;  // 전역 변수 맵 (함수 외부에서 선언된 변수 관리)
+    static int nextVarIndex = 0;  // 로컬 변수 인덱스
+    static int labelIndex = 1;  // 라벨의 인덱스 번호 관리
     // 매칭할 변수의 인덱스 관리
     static int matchTargetIndex = -1;
+    private static FileWriter fw;
+    // 함수 시그니처를 저장하는 맵 (함수 이름 : 시그니처)
+    private final Map<String, String> functionSignatures = new HashMap<>();  // 함수 이름을 key로 하고, 해당 함수의 시그니처를 value로 가지는 맵
+    ParseTreeProperty<String> rustTree = new ParseTreeProperty<>();
+    private String currentLoopEndLabel = null;  // 현재 루프의 종료 레이블을 저장하기 위한 변수
 
     private static void assignLocalVar(String varName) {
         if (scopeStack.isEmpty()) {
