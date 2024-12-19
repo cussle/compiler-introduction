@@ -2,8 +2,10 @@ import generated.tinyRustBaseListener;
 import generated.tinyRustParser;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.logging.Level;
@@ -714,6 +716,22 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         }
 
         rustTree.put(ctx, result);
+    }
+
+    @Override
+    public void exitMatch_body(tinyRustParser.Match_bodyContext ctx) {
+        StringBuilder result = new StringBuilder();
+
+        if (ctx.id() != null) {  // 변수에 값 할당
+            String varName = rustTree.get(ctx.id());
+            String exprCode = rustTree.get(ctx.expr());
+            result.append(exprCode);
+            result.append("istore_").append(getLocalVarTableIdx(varName)).append("\n");
+        } else if (ctx.expr() != null) {  // 단순 표현식 실행 후 변수에 저장
+            result.append(rustTree.get(ctx.expr()));
+        }
+
+        rustTree.put(ctx, result.toString());
     }
 
     @Override
