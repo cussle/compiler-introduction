@@ -783,7 +783,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             // 변수 < end 확인
             result.append("iload_").append(matchTargetIndex).append("\n");
             result.append("bipush ").append(end).append("\n");
-            result.append("if_icmpge L").append(labelIndex++).append("\n");  // 참일 경우, 해당 매칭 구문으로 점프
+            result.append("if_icmplt L").append(labelIndex++).append("\n");  // 참일 경우, 해당 매칭 구문으로 점프
             result.append(falseLabel).append(":\n");
         }
 
