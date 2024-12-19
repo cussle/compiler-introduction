@@ -727,14 +727,39 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     }
 
     @Override
+    public void exitMatch_stmt(tinyRustParser.Match_stmtContext ctx) {
+        StringBuilder result = new StringBuilder();
+        StringBuilder conditions = new StringBuilder();
+        StringBuilder bodys = new StringBuilder();
+
+        // 준비된 케이스 처리
+        int numCases = ctx.match_expr().size();
+        String endLabel = "L" + labelIndex++;
+        for (int i = 0; i < numCases; i++) {
+            tinyRustParser.Match_exprContext matchExprCtx = ctx.match_expr(i);
+            conditions.append(rustTree.get(matchExprCtx.match_conditional_expr()));
+            bodys.append(rustTree.get(matchExprCtx.match_body()).replace("${END}", endLabel));
+        }
+
+        result.append(conditions).append(bodys).append(endLabel).append(":\n");
+
+        rustTree.put(ctx, result.toString());
+    }
+
+    @Override
     public void exitMatch_conditional_expr(tinyRustParser.Match_conditional_exprContext ctx) {
         StringBuilder result = new StringBuilder();
 
         if (ctx.id() != null) {  // 식별자 매칭
             String id = rustTree.get(ctx.id());
-            result.append("iload_").append(matchTargetIndex).append("\n");
-            result.append("iload_").append(getLocalVarTableIdx(id)).append("\n");
-            result.append("if_icmpeq L").append(labelIndex++).append("\n");
+
+            if (ctx.id().getText().equals("_")) {  // 와일드 카드일 경우 별도로 처리
+                result.append("goto L").append(labelIndex++).append("\n");
+            } else {  // 일반 식별자
+                result.append("iload_").append(matchTargetIndex).append("\n");
+                result.append("iload_").append(getLocalVarTableIdx(id)).append("\n");
+                result.append("if_icmpeq L").append(labelIndex++).append("\n");
+            }
         } else if (ctx.literal() != null) {  // 리터럴 매칭 (ex. 2 | 3 | 4 혹은 단일)
             int matchLabelIndex = labelIndex++;
             for (tinyRustParser.LiteralContext litCtx : ctx.literal()) {
