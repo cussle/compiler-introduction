@@ -744,10 +744,15 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         for (int i = 0; i < numCases; i++) {
             tinyRustParser.Match_exprContext matchExprCtx = ctx.match_expr(i);
             conditions.append(rustTree.get(matchExprCtx.match_conditional_expr()));
-            bodys.append(rustTree.get(matchExprCtx.match_body()).replace("${END}", endLabel));
+            bodys.append(rustTree.get(matchExprCtx.match_body()));
+
+            // 마지막 케이스가 아닌 경우
+            if (i < numCases - 1) {
+                bodys.append("goto ").append(endLabel).append("\n");  // goto endLabel 추가
+            }
 
             if (matchExprCtx.match_conditional_expr().id() != null &&
-                matchExprCtx.match_conditional_expr().id().getText().equals("_")) {
+                matchExprCtx.match_conditional_expr().id().getText().equals("_")) {  // 와일드카드가 존재하는지
                 containWildCard = true;
             }
         }
@@ -818,7 +823,6 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
         } else if (ctx.expr() != null) {  // 단순 표현식 실행 후 변수에 저장
             result.append(rustTree.get(ctx.expr()));
         }
-        result.append("goto ${END}\n");
 
         rustTree.put(ctx, result.toString());
     }

@@ -55,7 +55,6 @@ iload_0
 bipush 2
 iadd
 istore_0
-goto L5
 L5:
 getstatic java/lang/System/out Ljava/io/PrintStream;
 iload_0
