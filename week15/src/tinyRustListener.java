@@ -316,6 +316,8 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             result = rustTree.get(ctx.loop_stmt());
         } else if (ctx.print_stmt() != null) {
             result = rustTree.get(ctx.print_stmt());
+        } else if (ctx.match_stmt() != null) {
+            result = rustTree.get(ctx.match_stmt());
         }
         rustTree.put(ctx, result);
     }
@@ -722,7 +724,7 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
     @Override
     public void enterMatch_stmt(tinyRustParser.Match_stmtContext ctx) {
         // 매칭할 변수의 인덱스 저장
-        String matchVar = rustTree.get(ctx.id());
+        String matchVar = ctx.id().getText();
         matchTargetIndex = getLocalVarTableIdx(matchVar);
     }
 

@@ -1,51 +1,11 @@
-fn add(a: i32, b: i32) -> i32 {
-    return a + b;
-}
-
-fn sub(a: i32, b: i32) -> i32 {
-    return a - b;
-}
-
-fn mul(a: i32, b: i32, c: i32) -> i32 {
-    return a * b * c;
-}
-
-fn div(a: i32, b: i32) -> i32 {
-    return a / b;
-}
-
 fn main() {
-    let mut a = 0;
-    let b = 10;
-    let c = 2;
+    let mut number = 7;
 
-    a = add(5, 3);
-    println!("{}", a);
-
-    a = sub(b, a);
-    println!("{}", a);
-
-    a = mul(a, b, c);
-    println!("{}", a);
-
-    a = 0;
-    loop {
-      if a <= 10 {
-        a = a + 1;
-      } else {
-        break;
-      }
+    match number {
+      1 => number,
+      2 | 3 | 5 | 7 => number = number + 2,
+      10..=20 => number = number + 3,
+      _ => number = number + 4,
     }
-    println!("{}", a);
-
-    a = 0;
-    for i in 1..=10 {
-      a = a + i;
-    }
-    println!("{}", a);
-
-    a = div(5, 3);
-    println!("{}", a);
-
     return;
 }
