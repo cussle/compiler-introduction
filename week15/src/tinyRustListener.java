@@ -749,18 +749,17 @@ public class tinyRustListener extends tinyRustBaseListener implements ParseTreeL
             int start = Integer.parseInt(parts[0]);
             int end = Integer.parseInt(parts[1]);
 
-            // 변수 < start
+            // 변수 < start 확인
             result.append("iload_").append(matchTargetIndex).append("\n");
             result.append("bipush ").append(start).append("\n");
-            result.append("if_icmplt ${DEFAULT}");
+            String falseLabel = "L" + labelIndex++;
+            result.append("if_icmplt L").append(falseLabel);  // 거짓일 경우, 다음 조건으로 점프
 
-            // 변수 > end
+            // 변수 < end 확인
             result.append("iload_").append(matchTargetIndex).append("\n");
             result.append("bipush ").append(end).append("\n");
-            result.append("if_icmpge ${DEFAULT}");
-
-            // 범위 내일 경우
-            result.append("goto L").append(labelIndex++).append("\n");
+            result.append("if_icmpge L").append(labelIndex++).append("\n");  // 참일 경우, 해당 매칭 구문으로 점프
+            result.append(falseLabel).append(":\n");
         }
 
         rustTree.put(ctx, result.toString());
